@@ -1,3 +1,15 @@
+# ResShift-ChestCT
+
+このリポジトリは、ResShift (ResShift: Efficient Diffusion Model for Image Super-resolution by Residual Shifting) の元コードをベースに、胸部CT画像への応用および改良を目的として構築したものです。
+
+### 元コード・ライセンスについて
+- 元のコード：https://github.com/zsyOAOA/ResShift
+- 元作者：Zongsheng Yue, Jianyi Wang, Chen Change Loy
+- 本リポジトリは元コードのライセンス（LICENSEファイル）に準拠して利用・改変しています。
+
+---
+以下は元の README.md の内容を含みます。
+
 # ResShift: Efficient Diffusion Model for Image Super-resolution by Residual Shifting (NeurIPS 2023, Spotlight, TPAMI@2025) 
 
 [Zongsheng Yue](https://zsyoaoa.github.io/), [Jianyi Wang](https://iceclear.github.io/), [Chen Change Loy](https://www.mmlab-ntu.com/person/ccloy/) 
