@@ -132,20 +132,20 @@ def get_configs(args):
         raise TypeError(f"Unexpected task type: {args.task}!")
 
     #prepare the checkpoint
-    if not ckpt_path.exists():
-         load_file_from_url(
-            url=ckpt_url,
-            model_dir=ckpt_dir,
-            progress=True,
-            file_name=ckpt_path.name,
-            )
-    if not vqgan_path.exists():
-         load_file_from_url(
-            url=vqgan_url,
-            model_dir=ckpt_dir,
-            progress=True,
-            file_name=vqgan_path.name,
-            )
+    # if not ckpt_path.exists():
+    #      load_file_from_url(
+    #         url=ckpt_url,
+    #         model_dir=ckpt_dir,
+    #         progress=True,
+    #         file_name=ckpt_path.name,
+    #         )
+    # if not vqgan_path.exists():
+    #      load_file_from_url(
+    #         url=vqgan_url,
+    #         model_dir=ckpt_dir,
+    #         progress=True,
+    #         file_name=vqgan_path.name,
+    #         )
 
     configs.model.ckpt_path = str(ckpt_path)
     configs.diffusion.params.sf = args.scale
