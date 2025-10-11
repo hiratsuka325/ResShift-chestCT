@@ -347,9 +347,12 @@ class ResShiftSampler(BaseSampler):
                     mask=(im_mask_tensor - 0.5) / 0.5 if mask_path is not None else None,
                     )
 
-            im_sr = util_image.tensor2img(im_sr_tensor, rgb2bgr=True, min_max=(0.0, 1.0))
-            im_path = out_path / f"{in_path.stem}.png"
-            util_image.imwrite(im_sr, im_path, chn='bgr', dtype_in='uint8')
+            # im_sr = util_image.tensor2img(im_sr_tensor, rgb2bgr=True, min_max=(0.0, 1.0))
+            # im_path = out_path / f"{in_path.stem}.png"
+            # util_image.imwrite(im_sr, im_path, chn='bgr', dtype_in='uint8')        
+            im_sr = util_image.tensor2img(im_sr_tensor, rgb2bgr=True, out_type=np.float32, min_max=(0.0, 1.0))
+            im_path = out_path / f"{in_path.stem}.mhd"
+            util_image.write_mhd(im_sr, im_path)
 
         self.write_log(f"Processing done, enjoy the results in {str(out_path)}")
 

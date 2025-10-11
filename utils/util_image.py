@@ -568,6 +568,34 @@ def imwrite(im_in, path, chn='rgb', dtype_in='float32', qf=None):
 
     return flag
 
+def write_mhd(im_in, path, spacing=(1.0, 1.0, 1.0), origin=(0.0, 0.0, 0.0)):
+    '''
+    Save image in .mhd format (MetaImage).
+    
+    Parameters:
+        im_in: numpy array, shape (H, W) or (H, W, C)
+        path: output file path (should end with .mhd)
+        spacing: voxel spacing (default: (1.0, 1.0, 1.0))
+        origin: origin of image (default: (0.0, 0.0, 0.0))
+    '''
+    path = Path(path)
+    if path.suffix.lower() != '.mhd':
+        raise ValueError("Output path must have a .mhd extension")
+
+    im = im_in.copy()
+
+    # If image is RGB, convert shape (H, W, 3) → vector image
+    if im.ndim == 3 and im.shape[2] == 3:
+        im_sitk = sitk.GetImageFromArray(im, isVector=True)
+    else:
+        im_sitk = sitk.GetImageFromArray(im)
+
+    im_sitk.SetSpacing(spacing)
+    im_sitk.SetOrigin(origin)
+
+    sitk.WriteImage(im_sitk, str(path))
+    return True
+
 def jpeg_compress(im, qf, chn_in='rgb'):
     '''
     Input:
