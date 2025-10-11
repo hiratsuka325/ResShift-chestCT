@@ -335,7 +335,8 @@ class ResShiftSampler(BaseSampler):
             if self.num_gpus > 1:
                 dist.barrier()
         else:
-            im_lq = util_image.imread(in_path, chn='rgb', dtype='float32')  # h x w x c
+            #im_lq = util_image.imread(in_path, chn='rgb', dtype='float32')  # h x w x c
+            im_lq = util_image.read_mhd(in_path, chn='rgb', dtype='float32')
             im_lq_tensor = util_image.img2tensor(im_lq).cuda()              # 1 x c x h x w
             if mask_path is not None:
                 im_mask = util_image.imread(mask_path, chn='gray', dtype='float32')[:,:, None]  # h x w x 1

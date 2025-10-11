@@ -12,6 +12,7 @@ from scipy import fft
 from pathlib import Path
 from einops import rearrange
 from skimage import img_as_ubyte, img_as_float32
+import SimpleITK as sitk
 
 # --------------------------Metrics----------------------------
 def ssim(img1, img2):
@@ -446,48 +447,100 @@ def cubic(x):
         (-0.5*absx3 + 2.5*absx2 - 4*absx + 2) * (((absx > 1)*(absx <= 2)).type_as(absx))
 
 # ------------------------Image I/O-----------------------------
-def imread(path, chn='rgb', dtype='float32', force_gray2rgb=True, force_rgba2rgb=False):
-    '''
-    Read image.
-    chn: 'rgb', 'bgr' or 'gray'
-    out:
-        im: h x w x c, numpy tensor
-    '''
-    try:
-        im = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)  # BGR, uint8
-    except:
-        print(str(path))
+# def imread(path, chn='rgb', dtype='float32', force_gray2rgb=True, force_rgba2rgb=False):
+#     '''
+#     Read image.
+#     chn: 'rgb', 'bgr' or 'gray'
+#     out:
+#         im: h x w x c, numpy tensor
+#     '''
+#     try:
+#         im = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)  # BGR, uint8
+#     except:
+#         print(str(path))
 
-    if im is None:
-        print(str(path))
+#     if im is None:
+#         print(str(path))
 
+#     if chn.lower() == 'gray':
+#         assert im.ndim == 2, f"{str(path)} has {im.ndim} channels!"
+#     else:
+#         if im.ndim == 2:
+#             if force_gray2rgb:
+#                 im = np.stack([im, im, im], axis=2)
+#             else:
+#                 raise ValueError(f"{str(path)} has {im.ndim} channels!")
+#         elif im.ndim == 4:
+#             if force_rgba2rgb:
+#                 im = im[:, :, :3]
+#             else:
+#                 raise ValueError(f"{str(path)} has {im.ndim} channels!")
+#         else:
+#             if chn.lower() == 'rgb':
+#                 im = bgr2rgb(im)
+#             elif chn.lower() == 'bgr':
+#                 pass
+
+#     if dtype == 'float32':
+#         im = im.astype(np.float32) / 255.
+#     elif dtype ==  'float64':
+#         im = im.astype(np.float64) / 255.
+#     elif dtype == 'uint8':
+#         pass
+#     else:
+#         sys.exit('Please input corrected dtype: float32, float64 or uint8!')
+
+#     return im
+
+def read_mhd(path, chn='rgb', dtype='float32', force_gray2rgb=True):
+    '''
+    Read a .mhd medical image file.
+    Parameters:
+        path: str, path to .mhd file
+        chn: 'rgb' or 'gray' (default 'rgb')
+        dtype: output dtype, 'float32' (default), 'float64', 'uint8'
+        force_gray2rgb: if True and image is single channel, replicate to 3 channels
+    
+    Returns:
+        im: numpy array, shape (h, w, c) or (h, w)
+    '''
+    img = sitk.ReadImage(str(path))
+    im = sitk.GetArrayFromImage(img)  # shape: [z, y, x] or [y, x]
+
+    # 3Dの場合は1スライス目を使う
+    if im.ndim == 3:
+        im = im[0]
+
+    # チャンネルがある場合はimのshape (h, w, c)となることがあるが、多くは (h, w)
     if chn.lower() == 'gray':
-        assert im.ndim == 2, f"{str(path)} has {im.ndim} channels!"
-    else:
+        if im.ndim != 2:
+            raise ValueError(f"{path} expected grayscale image but got shape {im.shape}")
+        # そのまま
+    else:  # rgb
         if im.ndim == 2:
             if force_gray2rgb:
-                im = np.stack([im, im, im], axis=2)
+                im = np.stack([im]*3, axis=-1)
             else:
-                raise ValueError(f"{str(path)} has {im.ndim} channels!")
-        elif im.ndim == 4:
-            if force_rgba2rgb:
-                im = im[:, :, :3]
-            else:
-                raise ValueError(f"{str(path)} has {im.ndim} channels!")
+                raise ValueError(f"{path} is grayscale but force_gray2rgb=False")
+        elif im.ndim == 3:
+            # すでに複数チャネルあり、SimpleITKは普通RGB順のはずなのでそのまま
+            pass
         else:
-            if chn.lower() == 'rgb':
-                im = bgr2rgb(im)
-            elif chn.lower() == 'bgr':
-                pass
+            raise ValueError(f"Unsupported image shape: {im.shape}")
 
+    # dtype変換と正規化
     if dtype == 'float32':
-        im = im.astype(np.float32) / 255.
-    elif dtype ==  'float64':
-        im = im.astype(np.float64) / 255.
+        im = im.astype(np.float32)
+        # if im.max() > 1.0:
+        #     im /= 255.
+    elif dtype == 'float64':
+        im = im.astype(np.float64)
+        # if im.max() > 1.0:
+        #     im /= 255.
     elif dtype == 'uint8':
-        pass
+        im = im.astype(np.uint8)
     else:
-        sys.exit('Please input corrected dtype: float32, float64 or uint8!')
+        raise ValueError('Please input corrected dtype: float32, float64 or uint8!')
 
     return im
 
