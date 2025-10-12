@@ -193,14 +193,47 @@ def main():
         mask_path = args.mask_path
     else:
         mask_path = None
+        
+    # ====== ここで基準ディレクトリを指定 ======
+    input_root = Path("../ChestCT/LR")  # ここを自分の環境に合わせて変更
+    # 例: Path("/workspace/data/images")
+    # =========================================
 
-    resshift_sampler.inference(
-            args.in_path,
-            args.out_path,
+    in_path = Path(args.in_path)
+    out_path = Path(args.out_path)
+
+    if in_path.suffix == ".txt":
+        with open(in_path, "r") as f:
+            lines = [line.strip() for line in f if line.strip()]
+        
+        for line in lines:
+            if " (" in line:
+                rel_path = line.split(" (")[0]
+            else:
+                rel_path = line
+            rel_path = Path(rel_path)
+            image_path = (input_root / rel_path).resolve()
+            if not image_path.exists():
+                print(f"[Warning] File not found: {image_path}")
+                continue
+
+            print(f"Processing: {image_path}")
+            resshift_sampler.inference(
+                image_path,
+                out_path,
+                mask_path=mask_path,
+                bs=args.bs,
+                noise_repeat=False
+            )
+    else:
+        resshift_sampler.inference(
+            in_path,
+            out_path,
             mask_path=mask_path,
             bs=args.bs,
             noise_repeat=False
-            )
+        )
+
 
 if __name__ == '__main__':
     main()
