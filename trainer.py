@@ -311,7 +311,7 @@ class TrainerBase:
 
             # prepare data
             data = self.prepare_data(next(self.dataloaders['train']))
-
+            
             # training phase
             self.training_step(data)
 

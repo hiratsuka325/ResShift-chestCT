@@ -313,3 +313,72 @@ def duf_downsample(x, kernel_size=13, scale=4):
     if squeeze_flag:
         x = x.squeeze(0)
     return x
+
+def paired_metas_from_meta_info_file(folders, keys, meta_info_file, filename_tmpl, scale):
+    """Generate paired paths from an meta information file.
+
+    Each line in the meta information file contains the image names and
+    image shape (usually for gt), separated by a white space.
+
+    Example of an meta information file:
+    ```
+    0001_s001.png (480,480,3)
+    0001_s002.png (480,480,3)
+    ```
+
+    Args:
+        folders (list[str]): A list of folder path. The order of list should
+            be [input_folder, gt_folder].
+        keys (list[str]): A list of keys identifying folders. The order should
+            be in consistent with folders, e.g., ['lq', 'gt'].
+        meta_info_file (str): Path to the meta information file.
+        filename_tmpl (str): Template for each filename. Note that the
+            template excludes the file extension. Usually the filename_tmpl is
+            for files in the input folder.
+
+    Returns:
+        list[str]: Returned path list.
+    """
+    assert len(folders) == 3, ('The len of folders should be 3 with [input_folder, gt_folder, mask_folder]. '
+                               f'But got {len(folders)}')
+    assert len(keys) == 3, f'The len of keys should be 3 with [input_key, gt_key, mask_key]. But got {len(keys)}'
+    
+    input_folder, gt_folder , mask_folder = folders
+    input_key, gt_key , mask_key = keys
+
+    lq_hq_metas = []
+
+    with open(meta_info_file, 'r') as f:
+        for line in f:
+            line = line.strip()  # Remove leading/trailing whitespace
+            if not line:
+                continue  # Skip empty lines
+
+            # Split file name and size info
+            path_part_mhd, size_part = line.split(' (')
+            path_part_raw = path_part_mhd[:-len('mhd')] + 'raw'
+            path_part_png = path_part_mhd[:-len('mhd')] + 'png'
+            size_str = size_part.strip(')')  # Remove parentheses
+            height, width, channels = map(int, size_str.split(','))  # Convert to integers
+            
+            # Calculate input size based on scale
+            input_size = (height // scale, width // scale, channels)
+            
+            # Construct paths
+            basename, ext = osp.splitext(osp.basename(path_part_mhd))
+            input_name = f'{filename_tmpl.format(basename)}{ext}'  # Keep the original extension
+            input_path = osp.join(input_folder, osp.dirname(path_part_mhd), input_name)  # Adjust this line
+            gt_path = osp.join(gt_folder, path_part_mhd)
+            mask_path = osp.join(mask_folder, path_part_png)
+
+            # Append to result list
+            lq_hq_metas.append({
+                f'{input_key}_path': input_path,
+                f'{gt_key}_path': gt_path,
+                f'{mask_key}_path': mask_path,
+                f'{input_key}_size': input_size,
+                f'{gt_key}_size': (height, width, channels),
+                f'{mask_key}_size': (height, width, channels)
+            })
+
+    return lq_hq_metas

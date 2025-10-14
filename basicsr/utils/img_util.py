@@ -4,6 +4,7 @@ import numpy as np
 import os
 import torch
 from torchvision.utils import make_grid
+import SimpleITK as sitk
 
 
 def img2tensor(imgs, bgr2rgb=True, float32=True):
@@ -129,6 +130,24 @@ def imfrombytes(content, flag='color', float32=False):
     img = cv2.imdecode(img_np, imread_flags[flag])
     if float32:
         img = img.astype(np.float32) / 255.
+    return img
+
+def read_mhd_to_numpy(content, float32=False):
+
+    img = sitk.ReadImage(content)
+    img = sitk.GetArrayFromImage(img)
+
+    #min_value = np.min(img)
+    #max_value = np.max(img)
+    #print(f"Minimum value: {min_value}")
+    #print(f"Maximum value: {max_value}")
+
+    img = img[:, :, np.newaxis]        # shape: [D, H, W, 1]
+    img = np.repeat(img, 3, axis=-1)   # shape: [D, H, W, 3]
+
+    if float32:
+        img = img.astype(np.float32)
+
     return img
 
 

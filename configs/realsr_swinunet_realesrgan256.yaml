@@ -48,7 +48,9 @@ autoencoder:
   target: ldm.models.autoencoder.VQModelTorch
   ckpt_path: weights/autoencoder_vq_f4.pth
   use_fp16: True
+  tune_decoder: false
   params:
+    lora_tune_decoder: false
     embed_dim: 3
     n_embed: 8192
     ddconfig:
@@ -95,54 +97,36 @@ degradation:
 
 data:
   train:
-    type: realesrgan
+    type: PairedImageDataset
     params:
-      dir_paths: []
-      txt_file_path: [
-                      '/mnt/sfs-common/zsyue/database/ImageNet/files_txt/path_train_all.txt', 
-                      '/mnt/sfs-common/zsyue/database/FFHQ/files_txt/files256.txt',
-                     ] 
-      im_exts: ['JPEG', ]
-      io_backend:
-        type: disk
-      blur_kernel_size: 21
-      kernel_list: ['iso', 'aniso', 'generalized_iso', 'generalized_aniso', 'plateau_iso', 'plateau_aniso']
-      kernel_prob: [0.45, 0.25, 0.12, 0.03, 0.12, 0.03]
-      sinc_prob: 0.1
-      blur_sigma: [0.2, 3.0]
-      betag_range: [0.5, 4.0]
-      betap_range: [1, 2.0]
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        #meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        io_backend:
+          type: disk
 
-      blur_kernel_size2: 15
-      kernel_list2: ['iso', 'aniso', 'generalized_iso', 'generalized_aniso', 'plateau_iso', 'plateau_aniso']
-      kernel_prob2: [0.45, 0.25, 0.12, 0.03, 0.12, 0.03]
-      sinc_prob2: 0.1
-      blur_sigma2: [0.2, 1.5]
-      betag_range2: [0.5, 4.0]
-      betap_range2: [1, 2.0]
-
-      final_sinc_prob: 0.8
-
-      gt_size: 256
-      crop_pad_size: 300
-      use_hflip: True
-      use_rot: False
-      rescale_gt: True
+        gt_size: 256
+        use_hflip: true
+        use_rot: true
+        scale: 4
+        phase: train
   val:
-    type: base
+    type: PairedImageDataset
     params:
-      dir_path: testdata/Val_SR/lq
-      im_exts: png
-      transform_type: default
-      transform_kwargs:
-          mean: 0.5
-          std: 0.5
-      extra_dir_path: testdata/Val_SR/gt
-      extra_transform_type: default
-      extra_transform_kwargs:
-          mean: 0.5
-          std: 0.5
-      recursive: False
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        io_backend:
+          type: disk
+
+        scale: 4
+        phase: val 
+
 
 train:
   # learning rate
@@ -151,7 +135,7 @@ train:
   lr_schedule: ~
   warmup_iterations: 5000
   # dataloader
-  batch: [64, 8]                
+  batch: [4, 1]                
   microbatch: 8
   num_workers: 4
   prefetch_factor: 2            
