@@ -1,0 +1,16 @@
+{"time":"2025-10-19T13:51:30.166899375+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/workspace/lung/hiratsuka/ResShift/wandb/run-20251019_135129-pbr9oqwn/logs/debug-core.log"}
+{"time":"2025-10-19T13:51:30.582902512+09:00","level":"INFO","msg":"created new stream","id":"pbr9oqwn"}
+{"time":"2025-10-19T13:51:30.582955914+09:00","level":"INFO","msg":"stream: started","id":"pbr9oqwn"}
+{"time":"2025-10-19T13:51:30.582981172+09:00","level":"INFO","msg":"sender: started","stream_id":"pbr9oqwn"}
+{"time":"2025-10-19T13:51:30.582983136+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"pbr9oqwn"}
+{"time":"2025-10-19T13:51:30.583075581+09:00","level":"INFO","msg":"handler: started","stream_id":"pbr9oqwn"}
+{"time":"2025-10-19T13:51:31.060350795+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-10-19T14:37:21.767083527+09:00","level":"INFO","msg":"api: retrying HTTP error","status":502,"url":"https://api.wandb.ai/files/s258962y-tokyo-unhiversity-of-agriculture-and-technology/experiment5/pbr9oqwn/file_stream","body":"\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>502 Server Error</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<h1>Error: Server Error</h1>\n<h2>The server encountered a temporary error and could not complete your request.<p>Please try again in 30 seconds.</h2>\n<h2></h2>\n</body></html>\n"}
+{"time":"2025-10-19T15:08:00.443895159+09:00","level":"INFO","msg":"stream: closing","id":"pbr9oqwn"}
+{"time":"2025-10-19T15:08:00.443931517+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-10-19T15:08:00.443987232+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-10-19T15:08:05.971164863+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-10-19T15:08:06.183745367+09:00","level":"INFO","msg":"handler: closed","stream_id":"pbr9oqwn"}
+{"time":"2025-10-19T15:08:06.18378398+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"pbr9oqwn"}
+{"time":"2025-10-19T15:08:06.183791083+09:00","level":"INFO","msg":"sender: closed","stream_id":"pbr9oqwn"}
+{"time":"2025-10-19T15:08:06.185028998+09:00","level":"INFO","msg":"stream: closed","id":"pbr9oqwn"}

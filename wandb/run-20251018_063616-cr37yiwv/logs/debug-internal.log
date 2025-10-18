@@ -1,0 +1,15 @@
+{"time":"2025-10-18T06:36:17.526688016+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/workspace/lung/hiratsuka/ResShift/wandb/run-20251018_063616-cr37yiwv/logs/debug-core.log"}
+{"time":"2025-10-18T06:36:17.932327958+09:00","level":"INFO","msg":"created new stream","id":"cr37yiwv"}
+{"time":"2025-10-18T06:36:17.932383426+09:00","level":"INFO","msg":"stream: started","id":"cr37yiwv"}
+{"time":"2025-10-18T06:36:17.932404346+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"cr37yiwv"}
+{"time":"2025-10-18T06:36:17.932419425+09:00","level":"INFO","msg":"handler: started","stream_id":"cr37yiwv"}
+{"time":"2025-10-18T06:36:17.932431268+09:00","level":"INFO","msg":"sender: started","stream_id":"cr37yiwv"}
+{"time":"2025-10-18T06:36:18.223512397+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-10-18T08:12:43.201146967+09:00","level":"INFO","msg":"stream: closing","id":"cr37yiwv"}
+{"time":"2025-10-18T08:12:43.201249792+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-10-18T08:12:43.20525593+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-10-18T08:12:49.323438176+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-10-18T08:12:49.546810952+09:00","level":"INFO","msg":"handler: closed","stream_id":"cr37yiwv"}
+{"time":"2025-10-18T08:12:49.546901364+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"cr37yiwv"}
+{"time":"2025-10-18T08:12:49.546934848+09:00","level":"INFO","msg":"sender: closed","stream_id":"cr37yiwv"}
+{"time":"2025-10-18T08:12:49.54832116+09:00","level":"INFO","msg":"stream: closed","id":"cr37yiwv"}

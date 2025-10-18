@@ -1,0 +1,1918 @@
+/usr/local/lib/python3.8/dist-packages/albumentations/__init__.py:13: UserWarning: A new version of Albumentations is available: 2.0.8 (you have 1.4.18). Upgrade using: pip install -U albumentations. To disable automatic update checks, set the environment variable NO_ALBUMENTATIONS_UPDATE to 1.
+  check_for_updates()
+trainer:
+  target: trainer.TrainerDifIR
+model:
+  target: models.unet.UNetModelSwin
+  ckpt_path: null
+  params:
+    image_size: 64
+    in_channels: 3
+    model_channels: 160
+    out_channels: 3
+    attention_resolutions:
+    - 64
+    - 32
+    - 16
+    - 8
+    dropout: 0
+    channel_mult:
+    - 1
+    - 2
+    - 2
+    - 4
+    num_res_blocks:
+    - 2
+    - 2
+    - 2
+    - 2
+    conv_resample: true
+    dims: 2
+    use_fp16: false
+    num_head_channels: 32
+    use_scale_shift_norm: true
+    resblock_updown: false
+    swin_depth: 2
+    swin_embed_dim: 192
+    window_size: 8
+    mlp_ratio: 4
+    cond_lq: true
+    lq_size: 64
+diffusion:
+  target: models.script_util.create_gaussian_diffusion
+  params:
+    sf: 4
+    schedule_name: exponential
+    schedule_kwargs:
+      power: 0.3
+    etas_end: 0.99
+    steps: 15
+    min_noise_level: 0.04
+    kappa: 2.0
+    weighted_mse: false
+    predict_type: xstart
+    timestep_respacing: null
+    scale_factor: 1.0
+    normalize_input: true
+    latent_flag: true
+autoencoder:
+  target: ldm.models.autoencoder.VQModelTorch
+  ckpt_path: weights/autoencoder_vq_f4.pth
+  use_fp16: true
+  tune_decoder: false
+  params:
+    lora_tune_decoder: false
+    embed_dim: 3
+    n_embed: 8192
+    ddconfig:
+      double_z: false
+      z_channels: 3
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult:
+      - 1
+      - 2
+      - 4
+      num_res_blocks: 2
+      attn_resolutions: []
+      dropout: 0.0
+      padding_mode: zeros
+degradation:
+  sf: 4
+  resize_prob:
+  - 0.2
+  - 0.7
+  - 0.1
+  resize_range:
+  - 0.15
+  - 1.5
+  gaussian_noise_prob: 0.5
+  noise_range:
+  - 1
+  - 30
+  poisson_scale_range:
+  - 0.05
+  - 3.0
+  gray_noise_prob: 0.4
+  jpeg_range:
+  - 30
+  - 95
+  second_order_prob: 0.5
+  second_blur_prob: 0.8
+  resize_prob2:
+  - 0.3
+  - 0.4
+  - 0.3
+  resize_range2:
+  - 0.3
+  - 1.2
+  gaussian_noise_prob2: 0.5
+  noise_range2:
+  - 1
+  - 25
+  poisson_scale_range2:
+  - 0.05
+  - 2.5
+  gray_noise_prob2: 0.4
+  jpeg_range2:
+  - 30
+  - 95
+  gt_size: 256
+  resize_back: false
+  use_sharp: false
+data:
+  train:
+    type: PairedImageDataset
+    params:
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
+        io_backend:
+          type: disk
+        gt_size: 256
+        use_hflip: true
+        use_rot: true
+        scale: 4
+        phase: train
+  val:
+    type: PairedImageDataset
+    params:
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        io_backend:
+          type: disk
+        scale: 4
+        phase: val
+train:
+  lr: 5.0e-05
+  lr_min: 2.0e-05
+  lr_schedule: null
+  warmup_iterations: 5000
+  batch:
+  - 8
+  - 1
+  microbatch: 8
+  num_workers: 4
+  prefetch_factor: 2
+  weight_decay: 0
+  ema_rate: 0.999
+  iterations: 300000
+  save_freq: 10000
+  log_freq:
+  - 200
+  - 2000
+  - 1
+  local_logging: true
+  tf_logging: false
+  use_ema_val: true
+  val_freq: ${train.save_freq}
+  val_y_channel: true
+  val_resolution: ${model.params.lq_size}
+  val_padding_mode: reflect
+  use_amp: true
+  seed: 123456
+  global_seeding: false
+  compile:
+    flag: false
+    mode: reduce-overhead
+  scale: 4
+division:
+  division_size: 64
+  overlap_size: 4
+logger:
+  wandb:
+    project: experiment5
+    name: ronbunnomama
+    id: null
+save_dir: results
+resume: ''
+cfg_path: configs/realsr_swinunet_realesrgan256.yaml
+/usr/local/lib/python3.8/dist-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/usr/local/lib/python3.8/dist-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3526.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+
+Number of parameters: 118.59M
+Restoring autoencoder from weights/autoencoder_vq_f4.pth
+building MemoryEfficientAttnBlock with 512 in_channels...
+Working with z of shape (1, 3, 64, 64) = 12288 dimensions.
+building MemoryEfficientAttnBlock with 512 in_channels...
+Loading autoencoder from weights/autoencoder_vq_f4.pth...
+Loaded Done
+Loading LIIPS Metric: vgg...
+Setting up [LPIPS] perceptual loss: trunk [vgg], v[0.1], spatial [off]
+/usr/local/lib/python3.8/dist-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=VGG16_Weights.IMAGENET1K_V1`. You can also use `weights=VGG16_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+Loading model from: /usr/local/lib/python3.8/dist-packages/lpips/weights/v0.1/vgg.pth
+Loading dataset: 100%|████████████████████████| 9387/9387 [1:07:14<00:00,  2.33file/s]
+Loading dataset: 100%|██████████████████████████████| 60/60 [00:26<00:00,  2.28file/s]
+Number of images in train data set: 9387
+Number of images in val data set: 60
+Train: 000200/300000, Loss/MSE: t(1):6.1e-01/6.1e-01, t(8):6.9e-01/6.9e-01, t(15):7.3e-01/7.3e-01, lr:1.99e-06
+Train: 000400/300000, Loss/MSE: t(1):1.9e-01/1.9e-01, t(8):4.0e-01/4.0e-01, t(15):6.3e-01/6.3e-01, lr:3.99e-06
+Train: 000600/300000, Loss/MSE: t(1):6.3e-02/6.3e-02, t(8):3.4e-01/3.4e-01, t(15):5.6e-01/5.6e-01, lr:5.99e-06
+Train: 000800/300000, Loss/MSE: t(1):4.0e-02/4.0e-02, t(8):3.0e-01/3.0e-01, t(15):4.6e-01/4.6e-01, lr:7.99e-06
+Train: 001000/300000, Loss/MSE: t(1):2.7e-02/2.7e-02, t(8):2.7e-01/2.7e-01, t(15):3.8e-01/3.8e-01, lr:9.99e-06
+Train: 001200/300000, Loss/MSE: t(1):2.1e-02/2.1e-02, t(8):2.5e-01/2.5e-01, t(15):3.5e-01/3.5e-01, lr:1.20e-05
+Train: 001400/300000, Loss/MSE: t(1):1.5e-02/1.5e-02, t(8):2.4e-01/2.4e-01, t(15):3.3e-01/3.3e-01, lr:1.40e-05
+Train: 001600/300000, Loss/MSE: t(1):1.3e-02/1.3e-02, t(8):2.3e-01/2.3e-01, t(15):3.3e-01/3.3e-01, lr:1.60e-05
+Train: 001800/300000, Loss/MSE: t(1):1.2e-02/1.2e-02, t(8):2.3e-01/2.3e-01, t(15):3.3e-01/3.3e-01, lr:1.80e-05
+Train: 002000/300000, Loss/MSE: t(1):1.0e-02/1.0e-02, t(8):2.3e-01/2.3e-01, t(15):3.2e-01/3.2e-01, lr:2.00e-05
+Train: 002200/300000, Loss/MSE: t(1):1.1e-02/1.1e-02, t(8):2.3e-01/2.3e-01, t(15):3.2e-01/3.2e-01, lr:2.20e-05
+Train: 002400/300000, Loss/MSE: t(1):9.4e-03/9.4e-03, t(8):2.2e-01/2.2e-01, t(15):3.2e-01/3.2e-01, lr:2.40e-05
+Train: 002600/300000, Loss/MSE: t(1):8.8e-03/8.8e-03, t(8):2.3e-01/2.3e-01, t(15):3.2e-01/3.2e-01, lr:2.60e-05
+Train: 002800/300000, Loss/MSE: t(1):8.1e-03/8.1e-03, t(8):2.3e-01/2.3e-01, t(15):3.1e-01/3.1e-01, lr:2.80e-05
+Train: 003000/300000, Loss/MSE: t(1):7.9e-03/7.9e-03, t(8):2.2e-01/2.2e-01, t(15):3.2e-01/3.2e-01, lr:3.00e-05
+Train: 003200/300000, Loss/MSE: t(1):8.2e-03/8.2e-03, t(8):2.3e-01/2.3e-01, t(15):3.2e-01/3.2e-01, lr:3.20e-05
+Train: 003400/300000, Loss/MSE: t(1):7.4e-03/7.4e-03, t(8):2.2e-01/2.2e-01, t(15):3.1e-01/3.1e-01, lr:3.40e-05
+Train: 003600/300000, Loss/MSE: t(1):6.6e-03/6.6e-03, t(8):2.2e-01/2.2e-01, t(15):3.0e-01/3.0e-01, lr:3.60e-05
+Train: 003800/300000, Loss/MSE: t(1):7.3e-03/7.3e-03, t(8):2.2e-01/2.2e-01, t(15):3.1e-01/3.1e-01, lr:3.80e-05
+Train: 004000/300000, Loss/MSE: t(1):6.8e-03/6.8e-03, t(8):2.2e-01/2.2e-01, t(15):3.1e-01/3.1e-01, lr:4.00e-05
+Train: 004200/300000, Loss/MSE: t(1):6.3e-03/6.3e-03, t(8):2.2e-01/2.2e-01, t(15):3.1e-01/3.1e-01, lr:4.20e-05
+Train: 004400/300000, Loss/MSE: t(1):6.8e-03/6.8e-03, t(8):2.2e-01/2.2e-01, t(15):3.0e-01/3.0e-01, lr:4.40e-05
+Train: 004600/300000, Loss/MSE: t(1):5.9e-03/5.9e-03, t(8):2.2e-01/2.2e-01, t(15):3.0e-01/3.0e-01, lr:4.60e-05
+Train: 004800/300000, Loss/MSE: t(1):5.4e-03/5.4e-03, t(8):2.2e-01/2.2e-01, t(15):3.1e-01/3.1e-01, lr:4.80e-05
+Train: 005000/300000, Loss/MSE: t(1):5.6e-03/5.6e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 005200/300000, Loss/MSE: t(1):5.5e-03/5.5e-03, t(8):2.2e-01/2.2e-01, t(15):3.1e-01/3.1e-01, lr:5.00e-05
+Train: 005400/300000, Loss/MSE: t(1):5.2e-03/5.2e-03, t(8):2.2e-01/2.2e-01, t(15):3.1e-01/3.1e-01, lr:5.00e-05
+Train: 005600/300000, Loss/MSE: t(1):4.9e-03/4.9e-03, t(8):2.2e-01/2.2e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 005800/300000, Loss/MSE: t(1):4.6e-03/4.6e-03, t(8):2.2e-01/2.2e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 006000/300000, Loss/MSE: t(1):4.9e-03/4.9e-03, t(8):2.2e-01/2.2e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 006200/300000, Loss/MSE: t(1):4.2e-03/4.2e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 006400/300000, Loss/MSE: t(1):4.3e-03/4.3e-03, t(8):2.1e-01/2.1e-01, t(15):3.1e-01/3.1e-01, lr:5.00e-05
+Train: 006600/300000, Loss/MSE: t(1):4.2e-03/4.2e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 006800/300000, Loss/MSE: t(1):4.1e-03/4.1e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 007000/300000, Loss/MSE: t(1):4.2e-03/4.2e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 007200/300000, Loss/MSE: t(1):3.9e-03/3.9e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 007400/300000, Loss/MSE: t(1):4.0e-03/4.0e-03, t(8):2.2e-01/2.2e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 007600/300000, Loss/MSE: t(1):3.8e-03/3.8e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 007800/300000, Loss/MSE: t(1):3.9e-03/3.9e-03, t(8):2.2e-01/2.2e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 008000/300000, Loss/MSE: t(1):3.9e-03/3.9e-03, t(8):2.1e-01/2.1e-01, t(15):3.1e-01/3.1e-01, lr:5.00e-05
+Train: 008200/300000, Loss/MSE: t(1):4.1e-03/4.1e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 008400/300000, Loss/MSE: t(1):3.7e-03/3.7e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 008600/300000, Loss/MSE: t(1):3.5e-03/3.5e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 008800/300000, Loss/MSE: t(1):3.9e-03/3.9e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 009000/300000, Loss/MSE: t(1):3.5e-03/3.5e-03, t(8):2.1e-01/2.1e-01, t(15):3.1e-01/3.1e-01, lr:5.00e-05
+Train: 009200/300000, Loss/MSE: t(1):3.4e-03/3.4e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 009400/300000, Loss/MSE: t(1):3.5e-03/3.5e-03, t(8):2.2e-01/2.2e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 009600/300000, Loss/MSE: t(1):3.5e-03/3.5e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 009800/300000, Loss/MSE: t(1):3.4e-03/3.4e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 010000/300000, Loss/MSE: t(1):3.3e-03/3.3e-03, t(8):2.1e-01/2.1e-01, t(15):3.1e-01/3.1e-01, lr:5.00e-05
+Elapsed time: 2508.64s
+====================================================================================================
+img stats:
+  min: 126.19844
+  max: 255.0
+  mean: 166.9959
+masked_img stats:
+  min: 131.01991
+  max: 235.0
+  mean: 182.66867
+  shape: (341684,)
+  dtype: float32
+  non-zero count: 341684
+masked_img2 stats:
+  min: 148.19354
+  max: 235.0
+  mean: 182.23846
+0.7862242255279993
+31.454053802155627
+Validation: 01/60...
+img stats:
+  min: 126.08804
+  max: 255.0
+  mean: 167.44548
+masked_img stats:
+  min: 135.84892
+  max: 235.0
+  mean: 180.88728
+  shape: (619761,)
+  dtype: float32
+  non-zero count: 619761
+masked_img2 stats:
+  min: 148.20132
+  max: 235.0
+  mean: 180.6386
+0.794963942197449
+31.946737599772604
+Validation: 02/60...
+img stats:
+  min: 123.50826
+  max: 255.0
+  mean: 168.0356
+masked_img stats:
+  min: 132.16847
+  max: 235.0
+  mean: 179.26973
+  shape: (879526,)
+  dtype: float32
+  non-zero count: 879526
+masked_img2 stats:
+  min: 143.30006
+  max: 235.0
+  mean: 179.00897
+0.8101372441943945
+32.58109833811129
+Validation: 03/60...
+img stats:
+  min: 124.48141
+  max: 255.0
+  mean: 168.83928
+masked_img stats:
+  min: 123.900085
+  max: 235.0
+  mean: 176.75934
+  shape: (1139305,)
+  dtype: float32
+  non-zero count: 1139305
+masked_img2 stats:
+  min: 142.4832
+  max: 235.0
+  mean: 176.58606
+0.8125452926226863
+32.802891828989466
+Validation: 04/60...
+img stats:
+  min: 116.49985
+  max: 255.0
+  mean: 169.59534
+masked_img stats:
+  min: 116.14518
+  max: 235.0
+  mean: 175.2598
+  shape: (1345068,)
+  dtype: float32
+  non-zero count: 1345068
+masked_img2 stats:
+  min: 145.02718
+  max: 235.0
+  mean: 175.22755
+0.8235846089167104
+33.35395374958254
+Validation: 05/60...
+img stats:
+  min: 125.792915
+  max: 255.0
+  mean: 170.50027
+masked_img stats:
+  min: 140.3543
+  max: 235.0
+  mean: 175.10953
+  shape: (1467097,)
+  dtype: float32
+  non-zero count: 1467097
+masked_img2 stats:
+  min: 146.92545
+  max: 235.0
+  mean: 175.04185
+0.8195214829120523
+33.299399340679955
+Validation: 06/60...
+img stats:
+  min: 125.675476
+  max: 255.0
+  mean: 171.39557
+masked_img stats:
+  min: 137.30951
+  max: 235.0
+  mean: 175.60828
+  shape: (1587141,)
+  dtype: float32
+  non-zero count: 1587141
+masked_img2 stats:
+  min: 143.35452
+  max: 235.0
+  mean: 175.50102
+0.8234211972057471
+33.47186455071097
+Validation: 07/60...
+img stats:
+  min: 127.096634
+  max: 255.0
+  mean: 172.07108
+masked_img stats:
+  min: 139.8132
+  max: 235.0
+  mean: 176.24207
+  shape: (1662142,)
+  dtype: float32
+  non-zero count: 1662142
+masked_img2 stats:
+  min: 142.85661
+  max: 235.0
+  mean: 176.178
+0.824932912534045
+33.555604793145584
+Validation: 08/60...
+img stats:
+  min: 125.54541
+  max: 255.0
+  mean: 172.04521
+masked_img stats:
+  min: 132.60114
+  max: 235.0
+  mean: 175.7594
+  shape: (1724076,)
+  dtype: float32
+  non-zero count: 1724076
+masked_img2 stats:
+  min: 144.07025
+  max: 235.0
+  mean: 175.639
+0.8214205462753396
+33.48806018166413
+Validation: 09/60...
+img stats:
+  min: 127.042
+  max: 255.0
+  mean: 171.78345
+masked_img stats:
+  min: 138.49054
+  max: 235.0
+  mean: 174.93565
+  shape: (1747931,)
+  dtype: float32
+  non-zero count: 1747931
+masked_img2 stats:
+  min: 145.04274
+  max: 235.0
+  mean: 174.88048
+0.8141836189063684
+33.230252476299185
+Validation: 10/60...
+img stats:
+  min: 126.58799
+  max: 255.0
+  mean: 171.29927
+masked_img stats:
+  min: 133.2295
+  max: 235.0
+  mean: 173.6731
+  shape: (1774651,)
+  dtype: float32
+  non-zero count: 1774651
+masked_img2 stats:
+  min: 145.69623
+  max: 235.0
+  mean: 173.69804
+0.8125234464158472
+33.308150877345156
+Validation: 11/60...
+img stats:
+  min: 123.287544
+  max: 255.0
+  mean: 171.18071
+masked_img stats:
+  min: 127.96905
+  max: 235.0
+  mean: 173.17049
+  shape: (1807269,)
+  dtype: float32
+  non-zero count: 1807269
+masked_img2 stats:
+  min: 143.02777
+  max: 235.0
+  mean: 173.23305
+0.8114129761728384
+33.34289753275943
+Validation: 12/60...
+img stats:
+  min: 118.677505
+  max: 255.0
+  mean: 171.12627
+masked_img stats:
+  min: 119.05086
+  max: 235.0
+  mean: 172.92065
+  shape: (1831934,)
+  dtype: float32
+  non-zero count: 1831934
+masked_img2 stats:
+  min: 146.30305
+  max: 235.0
+  mean: 173.05997
+0.8139279243568257
+33.45361197917969
+Validation: 13/60...
+img stats:
+  min: 125.51598
+  max: 255.0
+  mean: 170.93448
+masked_img stats:
+  min: 134.79778
+  max: 235.0
+  mean: 172.99763
+  shape: (1776219,)
+  dtype: float32
+  non-zero count: 1776219
+masked_img2 stats:
+  min: 144.93382
+  max: 235.0
+  mean: 173.22061
+0.8193368103277193
+33.68744876373383
+Validation: 14/60...
+img stats:
+  min: 125.936165
+  max: 255.0
+  mean: 170.68982
+masked_img stats:
+  min: 133.50764
+  max: 235.0
+  mean: 173.30191
+  shape: (1732098,)
+  dtype: float32
+  non-zero count: 1732098
+masked_img2 stats:
+  min: 146.08524
+  max: 235.0
+  mean: 173.56644
+0.8228563230302274
+33.79304986863845
+Validation: 15/60...
+img stats:
+  min: 125.43303
+  max: 255.0
+  mean: 170.42467
+masked_img stats:
+  min: 132.87129
+  max: 235.0
+  mean: 173.43875
+  shape: (1682975,)
+  dtype: float32
+  non-zero count: 1682975
+masked_img2 stats:
+  min: 146.63759
+  max: 235.0
+  mean: 173.73412
+0.8268624236445318
+34.000557066423866
+Validation: 16/60...
+img stats:
+  min: 126.154015
+  max: 255.0
+  mean: 169.93045
+masked_img stats:
+  min: 126.42681
+  max: 235.0
+  mean: 173.79971
+  shape: (1609485,)
+  dtype: float32
+  non-zero count: 1609485
+masked_img2 stats:
+  min: 142.11754
+  max: 235.0
+  mean: 173.97476
+0.8276312968940103
+33.98745360410649
+Validation: 17/60...
+img stats:
+  min: 125.489075
+  max: 255.0
+  mean: 169.07565
+masked_img stats:
+  min: 138.32877
+  max: 235.0
+  mean: 173.13872
+  shape: (1495938,)
+  dtype: float32
+  non-zero count: 1495938
+masked_img2 stats:
+  min: 143.69684
+  max: 235.0
+  mean: 173.51292
+0.8272834749348141
+33.93260208628058
+Validation: 18/60...
+img stats:
+  min: 125.905945
+  max: 255.0
+  mean: 168.21089
+masked_img stats:
+  min: 136.07674
+  max: 235.0
+  mean: 171.87892
+  shape: (1297171,)
+  dtype: float32
+  non-zero count: 1297171
+masked_img2 stats:
+  min: 142.02419
+  max: 235.0
+  mean: 172.11871
+0.8235128570489243
+33.913656101908416
+Validation: 19/60...
+img stats:
+  min: 125.2998
+  max: 255.0
+  mean: 167.15175
+masked_img stats:
+  min: 136.70627
+  max: 235.0
+  mean: 169.3309
+  shape: (944432,)
+  dtype: float32
+  non-zero count: 944432
+masked_img2 stats:
+  min: 136.48502
+  max: 235.0
+  mean: 169.54965
+0.8101765153361582
+33.753191240360735
+Validation: 20/60...
+img stats:
+  min: 125.49769
+  max: 255.0
+  mean: 166.27127
+masked_img stats:
+  min: 137.47539
+  max: 234.15028
+  mean: 169.5062
+  shape: (357863,)
+  dtype: float32
+  non-zero count: 357863
+masked_img2 stats:
+  min: 129.4988
+  max: 235.0
+  mean: 169.30092
+0.7971892701241962
+33.40853813878012
+Validation: 21/60...
+img stats:
+  min: 113.68064
+  max: 255.0
+  mean: 145.90114
+masked_img stats:
+  min: 113.78303
+  max: 235.0
+  mean: 167.36081
+  shape: (365313,)
+  dtype: float32
+  non-zero count: 365313
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 165.77989
+0.7417027333077028
+28.815426417730286
+Validation: 22/60...
+img stats:
+  min: 112.79222
+  max: 255.0
+  mean: 148.29878
+masked_img stats:
+  min: 114.276566
+  max: 235.0
+  mean: 161.62556
+  shape: (571456,)
+  dtype: float32
+  non-zero count: 571456
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 160.33365
+0.746609199694211
+29.424082036029308
+Validation: 23/60...
+img stats:
+  min: 116.89772
+  max: 255.0
+  mean: 149.64198
+masked_img stats:
+  min: 117.83989
+  max: 235.0
+  mean: 158.23569
+  shape: (718364,)
+  dtype: float32
+  non-zero count: 718364
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 157.2592
+0.7602432709400618
+30.04924843680145
+Validation: 24/60...
+img stats:
+  min: 101.86428
+  max: 255.0
+  mean: 150.3197
+masked_img stats:
+  min: 106.26828
+  max: 235.0
+  mean: 156.84966
+  shape: (801763,)
+  dtype: float32
+  non-zero count: 801763
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 155.83012
+0.7660480016632084
+30.344999896623186
+Validation: 25/60...
+img stats:
+  min: 118.59047
+  max: 255.0
+  mean: 150.92036
+masked_img stats:
+  min: 118.1737
+  max: 235.0
+  mean: 156.42007
+  shape: (852754,)
+  dtype: float32
+  non-zero count: 852754
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 155.3705
+0.7811825518137046
+30.76643134664593
+Validation: 26/60...
+img stats:
+  min: 111.08697
+  max: 255.0
+  mean: 150.67288
+masked_img stats:
+  min: 113.58704
+  max: 235.0
+  mean: 155.14442
+  shape: (892431,)
+  dtype: float32
+  non-zero count: 892431
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 154.17052
+0.7782697174757846
+30.87494475535689
+Validation: 27/60...
+img stats:
+  min: 103.59114
+  max: 255.0
+  mean: 149.76834
+masked_img stats:
+  min: 105.71427
+  max: 235.0
+  mean: 153.30148
+  shape: (910791,)
+  dtype: float32
+  non-zero count: 910791
+masked_img2 stats:
+  min: 125.55237
+  max: 235.0
+  mean: 152.4004
+0.7630362587256747
+30.640188263142058
+Validation: 28/60...
+img stats:
+  min: 114.48192
+  max: 255.0
+  mean: 148.22157
+masked_img stats:
+  min: 114.63986
+  max: 235.0
+  mean: 151.02579
+  shape: (905970,)
+  dtype: float32
+  non-zero count: 905970
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 150.22461
+0.752399772253304
+30.54790925410437
+Validation: 29/60...
+img stats:
+  min: 112.51798
+  max: 255.0
+  mean: 147.28162
+masked_img stats:
+  min: 113.47536
+  max: 235.0
+  mean: 149.29384
+  shape: (897723,)
+  dtype: float32
+  non-zero count: 897723
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 148.54736
+0.7460721390139181
+30.640991677021656
+Validation: 30/60...
+img stats:
+  min: 117.76062
+  max: 255.0
+  mean: 146.22981
+masked_img stats:
+  min: 117.809654
+  max: 235.0
+  mean: 148.33824
+  shape: (877746,)
+  dtype: float32
+  non-zero count: 877746
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 147.57117
+0.7418111423008856
+30.503709562585684
+Validation: 31/60...
+img stats:
+  min: 113.62685
+  max: 255.0
+  mean: 145.40712
+masked_img stats:
+  min: 114.435844
+  max: 235.0
+  mean: 147.41396
+  shape: (837675,)
+  dtype: float32
+  non-zero count: 837675
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 146.69124
+0.7401316290293227
+30.589235393821866
+Validation: 32/60...
+img stats:
+  min: 107.917564
+  max: 255.0
+  mean: 144.68564
+masked_img stats:
+  min: 109.73948
+  max: 235.0
+  mean: 146.93077
+  shape: (782309,)
+  dtype: float32
+  non-zero count: 782309
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 146.23308
+0.7405661280194996
+30.724634626528772
+Validation: 33/60...
+img stats:
+  min: 109.02936
+  max: 255.0
+  mean: 143.72914
+masked_img stats:
+  min: 110.928764
+  max: 235.0
+  mean: 146.44728
+  shape: (714063,)
+  dtype: float32
+  non-zero count: 714063
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 145.78444
+0.7378755973375978
+30.806019457992303
+Validation: 34/60...
+img stats:
+  min: 122.68248
+  max: 255.0
+  mean: 142.84456
+masked_img stats:
+  min: 122.18409
+  max: 235.0
+  mean: 146.09781
+  shape: (623826,)
+  dtype: float32
+  non-zero count: 623826
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 145.34105
+0.7397115174630392
+30.92255200226706
+Validation: 35/60...
+img stats:
+  min: 104.11471
+  max: 255.0
+  mean: 142.04929
+masked_img stats:
+  min: 106.596954
+  max: 235.0
+  mean: 145.70154
+  shape: (505864,)
+  dtype: float32
+  non-zero count: 505864
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 144.79306
+0.7476734683241606
+31.087684183305196
+Validation: 36/60...
+img stats:
+  min: 121.56345
+  max: 255.0
+  mean: 140.97406
+masked_img stats:
+  min: 122.04829
+  max: 235.0
+  mean: 145.00287
+  shape: (359000,)
+  dtype: float32
+  non-zero count: 359000
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 144.00685
+0.7570084079689202
+31.517664872377864
+Validation: 37/60...
+img stats:
+  min: 118.5994
+  max: 255.0
+  mean: 147.6284
+masked_img stats:
+  min: 118.616585
+  max: 235.0
+  mean: 183.75291
+  shape: (349752,)
+  dtype: float32
+  non-zero count: 349752
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 183.14594
+0.8280441053632965
+31.071587764024507
+Validation: 38/60...
+img stats:
+  min: 122.874374
+  max: 255.0
+  mean: 149.00798
+masked_img stats:
+  min: 122.92235
+  max: 235.0
+  mean: 180.94714
+  shape: (517302,)
+  dtype: float32
+  non-zero count: 517302
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 180.17908
+0.7811353923278574
+30.44097222179488
+Validation: 39/60...
+img stats:
+  min: 115.97106
+  max: 255.0
+  mean: 150.53392
+masked_img stats:
+  min: 117.57324
+  max: 235.0
+  mean: 172.50777
+  shape: (780117,)
+  dtype: float32
+  non-zero count: 780117
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 171.62947
+0.7918832132953728
+31.00074942953322
+Validation: 40/60...
+img stats:
+  min: 116.93579
+  max: 255.0
+  mean: 151.76932
+masked_img stats:
+  min: 116.839264
+  max: 235.0
+  mean: 166.79166
+  shape: (1029680,)
+  dtype: float32
+  non-zero count: 1029680
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 166.07388
+0.7766962119363867
+30.821168367011783
+Validation: 41/60...
+img stats:
+  min: 122.48729
+  max: 255.0
+  mean: 152.9495
+masked_img stats:
+  min: 121.75969
+  max: 235.0
+  mean: 164.09724
+  shape: (1207448,)
+  dtype: float32
+  non-zero count: 1207448
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 163.3017
+0.7916519609366012
+31.28534994285408
+Validation: 42/60...
+img stats:
+  min: 122.85024
+  max: 255.0
+  mean: 153.58401
+masked_img stats:
+  min: 123.219185
+  max: 235.0
+  mean: 162.96216
+  shape: (1320168,)
+  dtype: float32
+  non-zero count: 1320168
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 162.31764
+0.7998974746290538
+31.775159262855098
+Validation: 43/60...
+img stats:
+  min: 102.57661
+  max: 255.0
+  mean: 154.08177
+masked_img stats:
+  min: 105.84615
+  max: 235.0
+  mean: 161.98427
+  shape: (1402315,)
+  dtype: float32
+  non-zero count: 1402315
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 161.35214
+0.8093475018470876
+32.187062108715295
+Validation: 44/60...
+img stats:
+  min: 125.532585
+  max: 255.0
+  mean: 154.11354
+masked_img stats:
+  min: 126.00286
+  max: 235.0
+  mean: 161.41206
+  shape: (1457534,)
+  dtype: float32
+  non-zero count: 1457534
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 160.869
+0.812010973794415
+32.3188026063521
+Validation: 45/60...
+img stats:
+  min: 123.57261
+  max: 255.0
+  mean: 153.68382
+masked_img stats:
+  min: 127.14124
+  max: 235.0
+  mean: 160.14041
+  shape: (1496942,)
+  dtype: float32
+  non-zero count: 1496942
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 159.60393
+0.8109894733598565
+32.37991039125072
+Validation: 46/60...
+img stats:
+  min: 122.43591
+  max: 255.0
+  mean: 152.90369
+masked_img stats:
+  min: 122.24784
+  max: 235.0
+  mean: 158.18575
+  shape: (1527040,)
+  dtype: float32
+  non-zero count: 1527040
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 157.62796
+0.8104427966792056
+32.36420721560503
+Validation: 47/60...
+img stats:
+  min: 117.55066
+  max: 255.0
+  mean: 151.9356
+masked_img stats:
+  min: 117.8317
+  max: 235.0
+  mean: 156.32747
+  shape: (1548449,)
+  dtype: float32
+  non-zero count: 1548449
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 155.70439
+0.8041329037515887
+32.30200827110167
+Validation: 48/60...
+img stats:
+  min: 124.31463
+  max: 255.0
+  mean: 151.12523
+masked_img stats:
+  min: 123.578186
+  max: 235.0
+  mean: 154.87305
+  shape: (1553847,)
+  dtype: float32
+  non-zero count: 1553847
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 154.26906
+0.8012237274704176
+32.24647316970457
+Validation: 49/60...
+img stats:
+  min: 125.15161
+  max: 255.0
+  mean: 150.47583
+masked_img stats:
+  min: 124.531876
+  max: 235.0
+  mean: 153.87532
+  shape: (1555599,)
+  dtype: float32
+  non-zero count: 1555599
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 153.21558
+0.7987689297868545
+32.20519713002033
+Validation: 50/60...
+img stats:
+  min: 107.13587
+  max: 255.0
+  mean: 149.91176
+masked_img stats:
+  min: 108.88593
+  max: 235.0
+  mean: 152.83365
+  shape: (1555316,)
+  dtype: float32
+  non-zero count: 1555316
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 152.23273
+0.7980271608415611
+32.22345899783386
+Validation: 51/60...
+img stats:
+  min: 122.9118
+  max: 255.0
+  mean: 149.40158
+masked_img stats:
+  min: 122.6142
+  max: 235.0
+  mean: 152.29482
+  shape: (1540992,)
+  dtype: float32
+  non-zero count: 1540992
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 151.60301
+0.8007333952542922
+32.21191709361583
+Validation: 52/60...
+img stats:
+  min: 124.39542
+  max: 255.0
+  mean: 148.7182
+masked_img stats:
+  min: 124.01264
+  max: 235.0
+  mean: 151.16016
+  shape: (1522807,)
+  dtype: float32
+  non-zero count: 1522807
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 150.5562
+0.7990775829849652
+32.315546548008754
+Validation: 53/60...
+img stats:
+  min: 104.21984
+  max: 255.0
+  mean: 148.07167
+masked_img stats:
+  min: 106.38103
+  max: 235.0
+  mean: 150.60858
+  shape: (1483387,)
+  dtype: float32
+  non-zero count: 1483387
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 150.01698
+0.8025129567433901
+32.44607177437106
+Validation: 54/60...
+img stats:
+  min: 122.228485
+  max: 255.0
+  mean: 147.38095
+masked_img stats:
+  min: 121.92566
+  max: 235.0
+  mean: 150.26817
+  shape: (1418158,)
+  dtype: float32
+  non-zero count: 1418158
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 149.73123
+0.8062790298976672
+32.48306753975778
+Validation: 55/60...
+img stats:
+  min: 120.95651
+  max: 255.0
+  mean: 146.52193
+masked_img stats:
+  min: 121.72456
+  max: 235.0
+  mean: 149.62968
+  shape: (1306224,)
+  dtype: float32
+  non-zero count: 1306224
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 149.0372
+0.8105909744088869
+32.5940120154432
+Validation: 56/60...
+img stats:
+  min: 117.75606
+  max: 255.0
+  mean: 145.49306
+masked_img stats:
+  min: 117.44337
+  max: 235.0
+  mean: 149.24045
+  shape: (1135229,)
+  dtype: float32
+  non-zero count: 1135229
+masked_img2 stats:
+  min: 126.29414
+  max: 235.0
+  mean: 148.57072
+0.8145067971997471
+32.70679384421922
+Validation: 57/60...
+img stats:
+  min: 119.577774
+  max: 255.0
+  mean: 144.39182
+masked_img stats:
+  min: 119.153786
+  max: 235.0
+  mean: 147.65515
+  shape: (947564,)
+  dtype: float32
+  non-zero count: 947564
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 147.01901
+0.8325418854377418
+33.71327603657057
+Validation: 58/60...
+img stats:
+  min: 125.037384
+  max: 255.0
+  mean: 143.23083
+masked_img stats:
+  min: 125.36685
+  max: 235.0
+  mean: 146.4445
+  shape: (680883,)
+  dtype: float32
+  non-zero count: 680883
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 145.67206
+0.8404710944761803
+34.17438169646981
+Validation: 59/60...
+img stats:
+  min: 125.51672
+  max: 255.0
+  mean: 142.61
+masked_img stats:
+  min: 128.9703
+  max: 234.04541
+  mean: 145.24141
+  shape: (384561,)
+  dtype: float32
+  non-zero count: 384561
+masked_img2 stats:
+  min: 127.8516
+  max: 235.0
+  mean: 144.33545
+0.8551390763426493
+34.89023928355372
+Validation: 60/60...
+Validation Metric: PSNR= 0.97, SSIM=   inf...
+====================================================================================================
+Train: 010200/300000, Loss/MSE: t(1):3.3e-03/3.3e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 010400/300000, Loss/MSE: t(1):3.4e-03/3.4e-03, t(8):2.1e-01/2.1e-01, t(15):3.1e-01/3.1e-01, lr:5.00e-05
+Train: 010600/300000, Loss/MSE: t(1):3.1e-03/3.1e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 010800/300000, Loss/MSE: t(1):3.1e-03/3.1e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 011000/300000, Loss/MSE: t(1):3.2e-03/3.2e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 011200/300000, Loss/MSE: t(1):3.1e-03/3.1e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 011400/300000, Loss/MSE: t(1):3.2e-03/3.2e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 011600/300000, Loss/MSE: t(1):3.2e-03/3.2e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 011800/300000, Loss/MSE: t(1):3.3e-03/3.3e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 012000/300000, Loss/MSE: t(1):3.0e-03/3.0e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 012200/300000, Loss/MSE: t(1):3.2e-03/3.2e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 012400/300000, Loss/MSE: t(1):2.9e-03/2.9e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 012600/300000, Loss/MSE: t(1):3.5e-03/3.5e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 012800/300000, Loss/MSE: t(1):2.8e-03/2.8e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 013000/300000, Loss/MSE: t(1):3.6e-03/3.6e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 013200/300000, Loss/MSE: t(1):2.8e-03/2.8e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 013400/300000, Loss/MSE: t(1):2.8e-03/2.8e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 013600/300000, Loss/MSE: t(1):2.9e-03/2.9e-03, t(8):2.0e-01/2.0e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 013800/300000, Loss/MSE: t(1):3.1e-03/3.1e-03, t(8):2.0e-01/2.0e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 014000/300000, Loss/MSE: t(1):2.8e-03/2.8e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 014200/300000, Loss/MSE: t(1):2.7e-03/2.7e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 014400/300000, Loss/MSE: t(1):2.8e-03/2.8e-03, t(8):2.1e-01/2.1e-01, t(15):3.1e-01/3.1e-01, lr:5.00e-05
+Train: 014600/300000, Loss/MSE: t(1):2.7e-03/2.7e-03, t(8):2.0e-01/2.0e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 014800/300000, Loss/MSE: t(1):2.8e-03/2.8e-03, t(8):2.1e-01/2.1e-01, t(15):3.1e-01/3.1e-01, lr:5.00e-05
+Train: 015000/300000, Loss/MSE: t(1):2.8e-03/2.8e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 015200/300000, Loss/MSE: t(1):2.7e-03/2.7e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 015400/300000, Loss/MSE: t(1):2.8e-03/2.8e-03, t(8):2.0e-01/2.0e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 015600/300000, Loss/MSE: t(1):2.8e-03/2.8e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 015800/300000, Loss/MSE: t(1):2.9e-03/2.9e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 016000/300000, Loss/MSE: t(1):2.6e-03/2.6e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 016200/300000, Loss/MSE: t(1):2.7e-03/2.7e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 016400/300000, Loss/MSE: t(1):2.7e-03/2.7e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 016600/300000, Loss/MSE: t(1):2.7e-03/2.7e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 016800/300000, Loss/MSE: t(1):2.7e-03/2.7e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 017000/300000, Loss/MSE: t(1):2.5e-03/2.5e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 017200/300000, Loss/MSE: t(1):2.8e-03/2.8e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 017400/300000, Loss/MSE: t(1):2.6e-03/2.6e-03, t(8):2.0e-01/2.0e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 017600/300000, Loss/MSE: t(1):2.6e-03/2.6e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 017800/300000, Loss/MSE: t(1):2.6e-03/2.6e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 018000/300000, Loss/MSE: t(1):2.6e-03/2.6e-03, t(8):2.0e-01/2.0e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 018200/300000, Loss/MSE: t(1):2.6e-03/2.6e-03, t(8):2.0e-01/2.0e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 018400/300000, Loss/MSE: t(1):2.5e-03/2.5e-03, t(8):2.0e-01/2.0e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 018600/300000, Loss/MSE: t(1):2.7e-03/2.7e-03, t(8):2.1e-01/2.1e-01, t(15):3.1e-01/3.1e-01, lr:5.00e-05
+Train: 018800/300000, Loss/MSE: t(1):2.5e-03/2.5e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 019000/300000, Loss/MSE: t(1):2.5e-03/2.5e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 019200/300000, Loss/MSE: t(1):2.6e-03/2.6e-03, t(8):2.0e-01/2.0e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 019400/300000, Loss/MSE: t(1):2.6e-03/2.6e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Train: 019600/300000, Loss/MSE: t(1):2.5e-03/2.5e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 019800/300000, Loss/MSE: t(1):3.0e-03/3.0e-03, t(8):2.1e-01/2.1e-01, t(15):3.0e-01/3.0e-01, lr:5.00e-05
+Train: 020000/300000, Loss/MSE: t(1):2.4e-03/2.4e-03, t(8):2.1e-01/2.1e-01, t(15):2.9e-01/2.9e-01, lr:5.00e-05
+Elapsed time: 2568.96s
+====================================================================================================
+img stats:
+  min: 127.39396
+  max: 255.0
+  mean: 167.03613
+masked_img stats:
+  min: 136.81381
+  max: 235.0
+  mean: 182.62804
+  shape: (341684,)
+  dtype: float32
+  non-zero count: 341684
+masked_img2 stats:
+  min: 148.19354
+  max: 235.0
+  mean: 182.23846
+0.7767874640934369
+31.242532031543586
+Validation: 01/60...
+img stats:
+  min: 127.239746
+  max: 255.0
+  mean: 167.51436
+masked_img stats:
+  min: 134.97812
+  max: 235.0
+  mean: 180.8865
+  shape: (619761,)
+  dtype: float32
+  non-zero count: 619761
+masked_img2 stats:
+  min: 148.20132
+  max: 235.0
+  mean: 180.6386
+0.7901493080930793
+31.806184129949088
+Validation: 02/60...
+img stats:
+  min: 126.1379
+  max: 255.0
+  mean: 168.27505
+masked_img stats:
+  min: 131.47813
+  max: 235.0
+  mean: 179.36134
+  shape: (879526,)
+  dtype: float32
+  non-zero count: 879526
+masked_img2 stats:
+  min: 143.30006
+  max: 235.0
+  mean: 179.00897
+0.8056294168905055
+32.43302598916684
+Validation: 03/60...
+img stats:
+  min: 124.265465
+  max: 255.0
+  mean: 169.05167
+masked_img stats:
+  min: 136.12288
+  max: 235.0
+  mean: 176.84943
+  shape: (1139305,)
+  dtype: float32
+  non-zero count: 1139305
+masked_img2 stats:
+  min: 142.4832
+  max: 235.0
+  mean: 176.58606
+0.8096837390839114
+32.72556893828487
+Validation: 04/60...
+img stats:
+  min: 128.09717
+  max: 255.0
+  mean: 169.71146
+masked_img stats:
+  min: 135.98592
+  max: 235.0
+  mean: 175.39505
+  shape: (1345068,)
+  dtype: float32
+  non-zero count: 1345068
+masked_img2 stats:
+  min: 145.02718
+  max: 235.0
+  mean: 175.22755
+0.820659309774221
+33.27552326622993
+Validation: 05/60...
+img stats:
+  min: 127.90368
+  max: 255.0
+  mean: 170.58269
+masked_img stats:
+  min: 134.88779
+  max: 235.0
+  mean: 175.19861
+  shape: (1467097,)
+  dtype: float32
+  non-zero count: 1467097
+masked_img2 stats:
+  min: 146.92545
+  max: 235.0
+  mean: 175.04185
+0.8180667133407574
+33.259901164408866
+Validation: 06/60...
+img stats:
+  min: 128.24127
+  max: 255.0
+  mean: 171.44975
+masked_img stats:
+  min: 134.09286
+  max: 235.0
+  mean: 175.64937
+  shape: (1587141,)
+  dtype: float32
+  non-zero count: 1587141
+masked_img2 stats:
+  min: 143.35452
+  max: 235.0
+  mean: 175.50102
+0.8206897245862838
+33.42599127800105
+Validation: 07/60...
+img stats:
+  min: 128.25932
+  max: 255.0
+  mean: 172.24927
+masked_img stats:
+  min: 140.46133
+  max: 235.0
+  mean: 176.41254
+  shape: (1662142,)
+  dtype: float32
+  non-zero count: 1662142
+masked_img2 stats:
+  min: 142.85661
+  max: 235.0
+  mean: 176.178
+0.8229293645339474
+33.5197666428718
+Validation: 08/60...
+img stats:
+  min: 125.88208
+  max: 255.0
+  mean: 172.21405
+masked_img stats:
+  min: 135.44368
+  max: 235.0
+  mean: 175.85033
+  shape: (1724076,)
+  dtype: float32
+  non-zero count: 1724076
+masked_img2 stats:
+  min: 144.07025
+  max: 235.0
+  mean: 175.639
+0.8194243348129073
+33.43578824872821
+Validation: 09/60...
+img stats:
+  min: 128.229
+  max: 255.0
+  mean: 171.9364
+masked_img stats:
+  min: 135.97217
+  max: 235.0
+  mean: 175.04192
+  shape: (1747931,)
+  dtype: float32
+  non-zero count: 1747931
+masked_img2 stats:
+  min: 145.04274
+  max: 235.0
+  mean: 174.88048
+0.8123548813689374
+33.201779069645404
+Validation: 10/60...
+img stats:
+  min: 125.187935
+  max: 255.0
+  mean: 171.44505
+masked_img stats:
+  min: 130.65057
+  max: 235.0
+  mean: 173.83934
+  shape: (1774651,)
+  dtype: float32
+  non-zero count: 1774651
+masked_img2 stats:
+  min: 145.69623
+  max: 235.0
+  mean: 173.69804
+0.809890223404011
+33.266834451401714
+Validation: 11/60...
+img stats:
+  min: 127.123
+  max: 255.0
+  mean: 171.30397
+masked_img stats:
+  min: 132.51277
+  max: 235.0
+  mean: 173.27554
+  shape: (1807269,)
+  dtype: float32
+  non-zero count: 1807269
+masked_img2 stats:
+  min: 143.02777
+  max: 235.0
+  mean: 173.23305
+0.8099596218786403
+33.32245646430934
+Validation: 12/60...
+img stats:
+  min: 126.22414
+  max: 255.0
+  mean: 171.35606
+masked_img stats:
+  min: 130.24593
+  max: 235.0
+  mean: 173.1006
+  shape: (1831934,)
+  dtype: float32
+  non-zero count: 1831934
+masked_img2 stats:
+  min: 146.30305
+  max: 235.0
+  mean: 173.05997
+0.8105689052296092
+33.3819721537566
+Validation: 13/60...
+img stats:
+  min: 125.445175
+  max: 255.0
+  mean: 171.0827
+masked_img stats:
+  min: 129.5295
+  max: 235.0
+  mean: 173.12749
+  shape: (1776219,)
+  dtype: float32
+  non-zero count: 1776219
+masked_img2 stats:
+  min: 144.93382
+  max: 235.0
+  mean: 173.22061
+0.8159683501421979
+33.6290139001377
+Validation: 14/60...
+img stats:
+  min: 122.15361
+  max: 255.0
+  mean: 170.85643
+masked_img stats:
+  min: 133.19785
+  max: 235.0
+  mean: 173.40154
+  shape: (1732098,)
+  dtype: float32
+  non-zero count: 1732098
+masked_img2 stats:
+  min: 146.08524
+  max: 235.0
+  mean: 173.56644
+0.8203043825897444
+33.715603718823516
+Validation: 15/60...
+img stats:
+  min: 128.52568
+  max: 255.0
+  mean: 170.54231
+masked_img stats:
+  min: 132.3125
+  max: 235.0
+  mean: 173.51637
+  shape: (1682975,)
+  dtype: float32
+  non-zero count: 1682975
+masked_img2 stats:
+  min: 146.63759
+  max: 235.0
+  mean: 173.73412
+0.8249394918558939
+33.93799060933668
+Validation: 16/60...
+img stats:
+  min: 126.884796
+  max: 255.0
+  mean: 169.98737
+masked_img stats:
+  min: 125.88068
+  max: 235.0
+  mean: 173.836
+  shape: (1609485,)
+  dtype: float32
+  non-zero count: 1609485
+masked_img2 stats:
+  min: 142.11754
+  max: 235.0
+  mean: 173.97476
+0.8259642275668417
+33.93070086245133
+Validation: 17/60...
+img stats:
+  min: 126.59537
+  max: 255.0
+  mean: 169.1493
+masked_img stats:
+  min: 126.176315
+  max: 235.0
+  mean: 173.30551
+  shape: (1495938,)
+  dtype: float32
+  non-zero count: 1495938
+masked_img2 stats:
+  min: 143.69684
+  max: 235.0
+  mean: 173.51292
+0.8254980547167643
+33.88528747387121
+Validation: 18/60...
+img stats:
+  min: 126.91955
+  max: 255.0
+  mean: 168.32336
+masked_img stats:
+  min: 137.25371
+  max: 235.0
+  mean: 172.01416
+  shape: (1297171,)
+  dtype: float32
+  non-zero count: 1297171
+masked_img2 stats:
+  min: 142.02419
+  max: 235.0
+  mean: 172.11871
+0.8213823246294432
+33.84103899841085
+Validation: 19/60...
+img stats:
+  min: 126.21521
+  max: 255.0
+  mean: 167.25284
+masked_img stats:
+  min: 134.70187
+  max: 235.0
+  mean: 169.50713
+  shape: (944432,)
+  dtype: float32
+  non-zero count: 944432
+masked_img2 stats:
+  min: 136.48502
+  max: 235.0
+  mean: 169.54965
+0.8110747184305136
+33.77875237269643
+Validation: 20/60...
+img stats:
+  min: 126.34368
+  max: 252.04765
+  mean: 166.34721
+masked_img stats:
+  min: 137.403
+  max: 230.88669
+  mean: 169.58435
+  shape: (357863,)
+  dtype: float32
+  non-zero count: 357863
+masked_img2 stats:
+  min: 129.4988
+  max: 235.0
+  mean: 169.30092
+0.7929939597118347
+33.255152540604044
+Validation: 21/60...
+img stats:
+  min: 118.11588
+  max: 255.0
+  mean: 146.40839
+masked_img stats:
+  min: 118.18648
+  max: 235.0
+  mean: 167.37396
+  shape: (365313,)
+  dtype: float32
+  non-zero count: 365313
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 165.77989
+0.7400008475010081
+28.84892680433426
+Validation: 22/60...
+img stats:
+  min: 121.33304
+  max: 255.0
+  mean: 148.38864
+masked_img stats:
+  min: 121.59086
+  max: 235.0
+  mean: 161.53773
+  shape: (571456,)
+  dtype: float32
+  non-zero count: 571456
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 160.33365
+0.7475972376612946
+29.550984714493836
+Validation: 23/60...
+img stats:
+  min: 115.490616
+  max: 255.0
+  mean: 149.8844
+masked_img stats:
+  min: 116.46686
+  max: 235.0
+  mean: 158.19423
+  shape: (718364,)
+  dtype: float32
+  non-zero count: 718364
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 157.2592
+0.7610164885627134
+30.054562192020207
+Validation: 24/60...
+img stats:
+  min: 117.99512
+  max: 255.0
+  mean: 150.65405
+masked_img stats:
+  min: 118.38086
+  max: 235.0
+  mean: 156.83995
+  shape: (801763,)
+  dtype: float32
+  non-zero count: 801763
+masked_img2 stats:
+  min: 125.5
+  max: 235.0
+  mean: 155.83012
+0.7681951567592886
+30.443357210790204
+Validation: 25/60...
+Error in sys.excepthook:
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/linecache.py", line 74, in checkcache
+    stat = os.stat(fullname)
+KeyboardInterrupt
+
+Original exception was:
+Traceback (most recent call last):
+  File "main.py", line 71, in <module>
+    trainer.train()
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 322, in train
+    self.validation()
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 1021, in validation
+    for sample in self.base_diffusion.p_sample_loop_progressive(
+  File "/workspace/lung/hiratsuka/ResShift/models/gaussian_diffusion.py", line 461, in p_sample_loop_progressive
+    out = self.p_sample(
+  File "/workspace/lung/hiratsuka/ResShift/models/gaussian_diffusion.py", line 349, in p_sample
+    out = self.p_mean_variance(
+  File "/workspace/lung/hiratsuka/ResShift/models/respace.py", line 44, in p_mean_variance
+    return super().p_mean_variance(self._wrap_model(model), *args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/gaussian_diffusion.py", line 266, in p_mean_variance
+    model_output = model(self._scale_input(x_t, t), t, **model_kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/respace.py", line 63, in __call__
+    return self.model(x, new_ts, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/unet.py", line 892, in forward
+    h = module(h, emb)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/unet.py", line 50, in forward
+    x = layer(x)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/swin_transformer.py", line 440, in forward
+    x = blk(x)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/swin_transformer.py", line 279, in forward
+    x = x + self.drop_path(self.mlp(self.norm2(x)))
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/swin_transformer.py", line 28, in forward
+    x = self.fc1(x)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/conv.py", line 460, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/conv.py", line 456, in _conv_forward
+    return F.conv2d(input, weight, bias, self.stride,
+KeyboardInterrupt

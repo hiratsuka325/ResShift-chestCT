@@ -1,0 +1,15 @@
+{"time":"2025-10-18T21:06:08.268055247+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/workspace/lung/hiratsuka/ResShift/wandb/run-20251018_210608-s64saj85/logs/debug-core.log"}
+{"time":"2025-10-18T21:06:08.749542482+09:00","level":"INFO","msg":"created new stream","id":"s64saj85"}
+{"time":"2025-10-18T21:06:08.749594641+09:00","level":"INFO","msg":"stream: started","id":"s64saj85"}
+{"time":"2025-10-18T21:06:08.749649796+09:00","level":"INFO","msg":"handler: started","stream_id":"s64saj85"}
+{"time":"2025-10-18T21:06:08.749656529+09:00","level":"INFO","msg":"sender: started","stream_id":"s64saj85"}
+{"time":"2025-10-18T21:06:08.749655076+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"s64saj85"}
+{"time":"2025-10-18T21:06:09.032272544+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-10-18T23:01:31.327113314+09:00","level":"INFO","msg":"stream: closing","id":"s64saj85"}
+{"time":"2025-10-18T23:01:31.327215438+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-10-18T23:01:31.327294999+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-10-18T23:01:36.890785349+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-10-18T23:01:37.339515088+09:00","level":"INFO","msg":"handler: closed","stream_id":"s64saj85"}
+{"time":"2025-10-18T23:01:37.339554844+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"s64saj85"}
+{"time":"2025-10-18T23:01:37.339583899+09:00","level":"INFO","msg":"sender: closed","stream_id":"s64saj85"}
+{"time":"2025-10-18T23:01:37.343925884+09:00","level":"INFO","msg":"stream: closed","id":"s64saj85"}

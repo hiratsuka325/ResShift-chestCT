@@ -1,0 +1,419 @@
+/usr/local/lib/python3.8/dist-packages/albumentations/__init__.py:13: UserWarning: A new version of Albumentations is available: 2.0.8 (you have 1.4.18). Upgrade using: pip install -U albumentations. To disable automatic update checks, set the environment variable NO_ALBUMENTATIONS_UPDATE to 1.
+  check_for_updates()
+trainer:
+  target: trainer.TrainerDifIR
+model:
+  target: models.unet.UNetModelSwin
+  ckpt_path: null
+  params:
+    image_size: 64
+    in_channels: 3
+    model_channels: 160
+    out_channels: 3
+    attention_resolutions:
+    - 64
+    - 32
+    - 16
+    - 8
+    dropout: 0
+    channel_mult:
+    - 1
+    - 2
+    - 2
+    - 4
+    num_res_blocks:
+    - 2
+    - 2
+    - 2
+    - 2
+    conv_resample: true
+    dims: 2
+    use_fp16: false
+    num_head_channels: 32
+    use_scale_shift_norm: true
+    resblock_updown: false
+    swin_depth: 2
+    swin_embed_dim: 192
+    window_size: 8
+    mlp_ratio: 4
+    cond_lq: true
+    lq_size: 64
+diffusion:
+  target: models.script_util.create_gaussian_diffusion
+  params:
+    sf: 4
+    schedule_name: exponential
+    schedule_kwargs:
+      power: 0.3
+    etas_end: 0.99
+    steps: 15
+    min_noise_level: 0.04
+    kappa: 2.0
+    weighted_mse: false
+    predict_type: xstart
+    timestep_respacing: null
+    scale_factor: 1.0
+    normalize_input: true
+    latent_flag: true
+autoencoder:
+  target: ldm.models.autoencoder.VQModelTorch
+  ckpt_path: weights/autoencoder_vq_f4.pth
+  use_fp16: true
+  tune_decoder: false
+  params:
+    lora_tune_decoder: false
+    embed_dim: 3
+    n_embed: 8192
+    ddconfig:
+      double_z: false
+      z_channels: 3
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult:
+      - 1
+      - 2
+      - 4
+      num_res_blocks: 2
+      attn_resolutions: []
+      dropout: 0.0
+      padding_mode: zeros
+degradation:
+  sf: 4
+  resize_prob:
+  - 0.2
+  - 0.7
+  - 0.1
+  resize_range:
+  - 0.15
+  - 1.5
+  gaussian_noise_prob: 0.5
+  noise_range:
+  - 1
+  - 30
+  poisson_scale_range:
+  - 0.05
+  - 3.0
+  gray_noise_prob: 0.4
+  jpeg_range:
+  - 30
+  - 95
+  second_order_prob: 0.5
+  second_blur_prob: 0.8
+  resize_prob2:
+  - 0.3
+  - 0.4
+  - 0.3
+  resize_range2:
+  - 0.3
+  - 1.2
+  gaussian_noise_prob2: 0.5
+  noise_range2:
+  - 1
+  - 25
+  poisson_scale_range2:
+  - 0.05
+  - 2.5
+  gray_noise_prob2: 0.4
+  jpeg_range2:
+  - 30
+  - 95
+  gt_size: 256
+  resize_back: false
+  use_sharp: false
+data:
+  train:
+    type: PairedImageDataset
+    params:
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        io_backend:
+          type: disk
+        gt_size: 256
+        use_hflip: true
+        use_rot: true
+        scale: 4
+        phase: train
+  val:
+    type: PairedImageDataset
+    params:
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        io_backend:
+          type: disk
+        scale: 4
+        phase: val
+train:
+  lr: 5.0e-05
+  lr_min: 2.0e-05
+  lr_schedule: null
+  warmup_iterations: 5000
+  batch:
+  - 8
+  - 1
+  microbatch: 8
+  num_workers: 4
+  prefetch_factor: 2
+  weight_decay: 0
+  ema_rate: 0.999
+  iterations: 300000
+  save_freq: 10000
+  log_freq:
+  - 200
+  - 2000
+  - 1
+  local_logging: true
+  tf_logging: false
+  use_ema_val: true
+  val_freq: 200
+  val_y_channel: true
+  val_resolution: ${model.params.lq_size}
+  val_padding_mode: reflect
+  use_amp: true
+  seed: 123456
+  global_seeding: false
+  compile:
+    flag: false
+    mode: reduce-overhead
+  scale: 4
+division:
+  division_size: 64
+  overlap_size: 4
+logger:
+  wandb:
+    project: experiment5
+    name: ronbunnomama
+    id: null
+save_dir: results
+resume: ''
+cfg_path: configs/realsr_swinunet_realesrgan256.yaml
+/usr/local/lib/python3.8/dist-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/usr/local/lib/python3.8/dist-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3526.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+
+Number of parameters: 118.59M
+Restoring autoencoder from weights/autoencoder_vq_f4.pth
+building MemoryEfficientAttnBlock with 512 in_channels...
+Working with z of shape (1, 3, 64, 64) = 12288 dimensions.
+building MemoryEfficientAttnBlock with 512 in_channels...
+Loading autoencoder from weights/autoencoder_vq_f4.pth...
+Loaded Done
+Loading LIIPS Metric: vgg...
+Setting up [LPIPS] perceptual loss: trunk [vgg], v[0.1], spatial [off]
+/usr/local/lib/python3.8/dist-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=VGG16_Weights.IMAGENET1K_V1`. You can also use `weights=VGG16_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+Loading model from: /usr/local/lib/python3.8/dist-packages/lpips/weights/v0.1/vgg.pth
+Loading dataset: 100%|██████████████████████████████| 60/60 [00:14<00:00,  4.02file/s]
+Loading dataset: 100%|██████████████████████████████| 60/60 [00:14<00:00,  4.24file/s]
+Number of images in train data set: 60
+Number of images in val data set: 60
+Train: 000200/300000, Loss/MSE: t(1):8.2e-01/8.2e-01, t(8):8.8e-01/8.8e-01, t(15):8.9e-01/8.9e-01, lr:1.99e-06
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 88.51329
+  shape: (1, 3, 1984, 2240)
+masked_img stats:
+  min: 62.07264
+  max: 172.22615
+  mean: 112.610085
+  shape: (341684,)
+  dtype: float32
+  non-zero count: 341684
+masked_img2 stats:
+  min: 61.38707
+  max: 235.0
+  mean: 129.47687
+Validation: 01/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 90.64234
+  shape: (1, 3, 1984, 2240)
+masked_img stats:
+  min: 69.70165
+  max: 190.44002
+  mean: 111.58376
+  shape: (619761,)
+  dtype: float32
+  non-zero count: 619761
+masked_img2 stats:
+  min: 61.40263
+  max: 235.0
+  mean: 126.27726
+Validation: 02/60...
+img stats:
+  min: 9.581315
+  max: 255.0
+  mean: 92.0314
+  shape: (1, 3, 1984, 2240)
+masked_img stats:
+  min: 66.47545
+  max: 206.96207
+  mean: 111.291115
+  shape: (879526,)
+  dtype: float32
+  non-zero count: 879526
+masked_img2 stats:
+  min: 51.60014
+  max: 235.0
+  mean: 123.01798
+Validation: 03/60...
+img stats:
+  min: 20.360783
+  max: 255.0
+  mean: 92.92784
+  shape: (1, 3, 1984, 2240)
+masked_img stats:
+  min: 69.89503
+  max: 201.1283
+  mean: 109.84211
+  shape: (1139305,)
+  dtype: float32
+  non-zero count: 1139305
+masked_img2 stats:
+  min: 49.966396
+  max: 235.0
+  mean: 118.17207
+Validation: 04/60...
+img stats:
+  min: 13.464486
+  max: 255.0
+  mean: 94.26691
+  shape: (1, 3, 1984, 2240)
+masked_img stats:
+  min: 74.22899
+  max: 223.46931
+  mean: 110.29225
+  shape: (1345068,)
+  dtype: float32
+  non-zero count: 1345068
+masked_img2 stats:
+  min: 55.054348
+  max: 235.0
+  mean: 115.45502
+Validation: 05/60...
+img stats:
+  min: 2.876005
+  max: 255.0
+  mean: 95.3719
+  shape: (1, 3, 1984, 2240)
+masked_img stats:
+  min: 63.90498
+  max: 229.71088
+  mean: 110.008095
+  shape: (1467097,)
+  dtype: float32
+  non-zero count: 1467097
+masked_img2 stats:
+  min: 58.85087
+  max: 235.0
+  mean: 115.08362
+Validation: 06/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 95.92081
+  shape: (1, 3, 1984, 2240)
+masked_img stats:
+  min: 70.40316
+  max: 213.48839
+  mean: 109.50579
+  shape: (1587141,)
+  dtype: float32
+  non-zero count: 1587141
+masked_img2 stats:
+  min: 51.709057
+  max: 235.0
+  mean: 116.002205
+Validation: 07/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 96.72099
+  shape: (1, 3, 1984, 2240)
+masked_img stats:
+  min: 69.01795
+  max: 200.60529
+  mean: 109.77133
+  shape: (1662142,)
+  dtype: float32
+  non-zero count: 1662142
+masked_img2 stats:
+  min: 50.713253
+  max: 235.0
+  mean: 117.35588
+Validation: 08/60...
+Error in sys.excepthook:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.8/dist-packages/wandb/sdk/lib/exit_hooks.py", line 52, in exc_handler
+    traceback.print_exception(exc_type, exc, tb)
+  File "/usr/lib/python3.8/traceback.py", line 103, in print_exception
+    for line in TracebackException(
+  File "/usr/local/lib/python3.8/dist-packages/exceptiongroup/_formatting.py", line 88, in __init__
+    if sys.version_info >= (3, 10):
+KeyboardInterrupt
+
+Original exception was:
+Traceback (most recent call last):
+  File "main.py", line 71, in <module>
+    trainer.train()
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 322, in train
+    self.validation()
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 1021, in validation
+    for sample in self.base_diffusion.p_sample_loop_progressive(
+  File "/workspace/lung/hiratsuka/ResShift/models/gaussian_diffusion.py", line 461, in p_sample_loop_progressive
+    out = self.p_sample(
+  File "/workspace/lung/hiratsuka/ResShift/models/gaussian_diffusion.py", line 349, in p_sample
+    out = self.p_mean_variance(
+  File "/workspace/lung/hiratsuka/ResShift/models/respace.py", line 44, in p_mean_variance
+    return super().p_mean_variance(self._wrap_model(model), *args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/gaussian_diffusion.py", line 266, in p_mean_variance
+    model_output = model(self._scale_input(x_t, t), t, **model_kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/respace.py", line 63, in __call__
+    return self.model(x, new_ts, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/unet.py", line 887, in forward
+    h = module(h, emb)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/unet.py", line 48, in forward
+    x = layer(x, emb)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/unet.py", line 194, in forward
+    h = self.in_layers(x)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/container.py", line 215, in forward
+    input = module(input)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/basic_ops.py", line 17, in forward
+    return super().forward(x.float()).type(x.dtype)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/normalization.py", line 279, in forward
+    return F.group_norm(
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/functional.py", line 2558, in group_norm
+    return torch.group_norm(input, num_groups, weight, bias, eps, torch.backends.cudnn.enabled)
+KeyboardInterrupt

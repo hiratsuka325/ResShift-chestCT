@@ -1,0 +1,15 @@
+{"time":"2025-10-18T19:30:24.288756946+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/workspace/lung/hiratsuka/ResShift/wandb/run-20251018_193024-ol1zejlh/logs/debug-core.log"}
+{"time":"2025-10-18T19:30:24.850674867+09:00","level":"INFO","msg":"created new stream","id":"ol1zejlh"}
+{"time":"2025-10-18T19:30:24.850730242+09:00","level":"INFO","msg":"stream: started","id":"ol1zejlh"}
+{"time":"2025-10-18T19:30:24.850751773+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"ol1zejlh"}
+{"time":"2025-10-18T19:30:24.850765689+09:00","level":"INFO","msg":"sender: started","stream_id":"ol1zejlh"}
+{"time":"2025-10-18T19:30:24.850811206+09:00","level":"INFO","msg":"handler: started","stream_id":"ol1zejlh"}
+{"time":"2025-10-18T19:30:25.185513986+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-10-18T19:30:25.488275409+09:00","level":"INFO","msg":"stream: closing","id":"ol1zejlh"}
+{"time":"2025-10-18T19:30:25.488303732+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-10-18T19:30:25.488340953+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-10-18T19:30:31.174644939+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-10-18T19:30:31.440015961+09:00","level":"INFO","msg":"handler: closed","stream_id":"ol1zejlh"}
+{"time":"2025-10-18T19:30:31.440056939+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"ol1zejlh"}
+{"time":"2025-10-18T19:30:31.440085513+09:00","level":"INFO","msg":"sender: closed","stream_id":"ol1zejlh"}
+{"time":"2025-10-18T19:30:31.442580639+09:00","level":"INFO","msg":"stream: closed","id":"ol1zejlh"}

@@ -1,0 +1,15 @@
+{"time":"2025-10-16T15:46:28.027129727+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/workspace/lung/hiratsuka/ResShift/wandb/run-20251016_154627-i0wh3jud/logs/debug-core.log"}
+{"time":"2025-10-16T15:46:28.475533347+09:00","level":"INFO","msg":"created new stream","id":"i0wh3jud"}
+{"time":"2025-10-16T15:46:28.475589533+09:00","level":"INFO","msg":"stream: started","id":"i0wh3jud"}
+{"time":"2025-10-16T15:46:28.475627786+09:00","level":"INFO","msg":"sender: started","stream_id":"i0wh3jud"}
+{"time":"2025-10-16T15:46:28.475633978+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"i0wh3jud"}
+{"time":"2025-10-16T15:46:28.475655178+09:00","level":"INFO","msg":"handler: started","stream_id":"i0wh3jud"}
+{"time":"2025-10-16T15:46:28.50089685+09:00","level":"INFO","msg":"stream: closing","id":"i0wh3jud"}
+{"time":"2025-10-16T15:46:28.50107027+09:00","level":"ERROR","msg":"sender: upsertConfig: RunRecord is nil"}
+{"time":"2025-10-16T15:46:28.703595732+09:00","level":"ERROR","msg":"HTTP error","status":404,"method":"POST","url":"https://api.wandb.ai/graphql"}
+{"time":"2025-10-16T15:46:28.703743252+09:00","level":"ERROR","msg":"runfiles: CreateRunFiles returned error: returned error 404: {\"data\":{\"createRunFiles\":null},\"errors\":[{\"message\":\"project /experiment5 not found during createRunFiles\",\"path\":[\"createRunFiles\"]}]}"}
+{"time":"2025-10-16T15:46:28.713429367+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-10-16T15:46:28.71346768+09:00","level":"INFO","msg":"handler: closed","stream_id":"i0wh3jud"}
+{"time":"2025-10-16T15:46:28.713479232+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"i0wh3jud"}
+{"time":"2025-10-16T15:46:28.71348345+09:00","level":"INFO","msg":"sender: closed","stream_id":"i0wh3jud"}
+{"time":"2025-10-16T15:46:28.715808087+09:00","level":"INFO","msg":"stream: closed","id":"i0wh3jud"}

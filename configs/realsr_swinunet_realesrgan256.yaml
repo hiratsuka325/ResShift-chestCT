@@ -103,8 +103,8 @@ data:
         dataroot_gt: ../ChestCT/HR
         dataroot_lq: ../ChestCT/LR
         dataroot_mask: ../ChestCT/mask
-        #meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
-        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
+        #meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
         io_backend:
           type: disk
 
@@ -135,7 +135,7 @@ train:
   lr_schedule: ~
   warmup_iterations: 5000
   # dataloader
-  batch: [4, 1]                
+  batch: [8, 1]                
   microbatch: 8
   num_workers: 4
   prefetch_factor: 2            
@@ -151,6 +151,7 @@ train:
   # validation settings
   use_ema_val: True            
   val_freq: ${train.save_freq}
+  #val_freq: 200
   val_y_channel: True
   val_resolution: ${model.params.lq_size}
   val_padding_mode: reflect
@@ -162,3 +163,16 @@ train:
   compile:
     flag: False
     mode: reduce-overhead      # default, reduce-overhead
+
+  scale: 4
+
+division: 
+  division_size: 64
+  overlap_size: 4
+
+
+logger:
+  wandb:
+    project: experiment5
+    name: ronbunnomama
+    id: 

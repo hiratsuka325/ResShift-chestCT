@@ -1,0 +1,15 @@
+{"time":"2025-10-16T16:08:52.157562162+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/workspace/lung/hiratsuka/ResShift/wandb/run-20251016_160852-ipt7z8ws/logs/debug-core.log"}
+{"time":"2025-10-16T16:08:52.592794953+09:00","level":"INFO","msg":"created new stream","id":"ipt7z8ws"}
+{"time":"2025-10-16T16:08:52.592863795+09:00","level":"INFO","msg":"stream: started","id":"ipt7z8ws"}
+{"time":"2025-10-16T16:08:52.592893902+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"ipt7z8ws"}
+{"time":"2025-10-16T16:08:52.59289787+09:00","level":"INFO","msg":"sender: started","stream_id":"ipt7z8ws"}
+{"time":"2025-10-16T16:08:52.592947094+09:00","level":"INFO","msg":"handler: started","stream_id":"ipt7z8ws"}
+{"time":"2025-10-16T16:08:52.950054567+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-10-16T16:10:38.131528095+09:00","level":"INFO","msg":"stream: closing","id":"ipt7z8ws"}
+{"time":"2025-10-16T16:10:38.131590805+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-10-16T16:10:38.131627776+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-10-16T16:10:39.179304948+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-10-16T16:10:39.580008587+09:00","level":"INFO","msg":"handler: closed","stream_id":"ipt7z8ws"}
+{"time":"2025-10-16T16:10:39.580079953+09:00","level":"INFO","msg":"sender: closed","stream_id":"ipt7z8ws"}
+{"time":"2025-10-16T16:10:39.580067319+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"ipt7z8ws"}
+{"time":"2025-10-16T16:10:39.584516868+09:00","level":"INFO","msg":"stream: closed","id":"ipt7z8ws"}

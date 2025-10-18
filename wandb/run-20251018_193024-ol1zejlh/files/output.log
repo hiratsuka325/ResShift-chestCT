@@ -1,0 +1,38 @@
+Traceback (most recent call last):
+  File "main.py", line 70, in <module>
+    trainer = get_obj_from_str(configs.trainer.target)(configs)
+  File "/workspace/lung/hiratsuka/ResShift/utils/util_common.py", line 24, in get_obj_from_str
+    return getattr(importlib.import_module(module, package=None), cls)
+  File "/usr/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 844, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 981, in get_code
+  File "<frozen importlib._bootstrap_external>", line 911, in source_to_code
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 1061
+    psnr, count_psnr += util_image.calculate_psnr_mask(
+    ^
+SyntaxError: illegal expression for augmented assignment
+Traceback (most recent call last):
+  File "main.py", line 70, in <module>
+    trainer = get_obj_from_str(configs.trainer.target)(configs)
+  File "/workspace/lung/hiratsuka/ResShift/utils/util_common.py", line 24, in get_obj_from_str
+    return getattr(importlib.import_module(module, package=None), cls)
+  File "/usr/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 844, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 981, in get_code
+  File "<frozen importlib._bootstrap_external>", line 911, in source_to_code
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 1061
+    psnr, count_psnr += util_image.calculate_psnr_mask(
+    ^
+SyntaxError: illegal expression for augmented assignment

@@ -318,9 +318,12 @@ class PairedImageDataset(Dataset):
         if self.mean is not None or self.std is not None:
             normalize(img_lq, self.mean, self.std, inplace=True)
             normalize(img_gt, self.mean, self.std, inplace=True)
+            
+        img_lq = img_lq * 2 - 1
+        img_gt = img_gt * 2 - 1
 
         #return {'lq': img_lq, 'gt': img_gt, 'mask': img_mask, 'lq_path': lq_path, 'gt_path': gt_path, 'mask_path':mask_path}
-        return {'lq': img_lq, 'gt': img_gt}
+        return {'lq': img_lq, 'gt': img_gt, 'lung_mask': img_mask}
 
     def __len__(self):
         return len(self.paths)

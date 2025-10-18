@@ -34,11 +34,13 @@ import torch.multiprocessing as mp
 import torchvision.utils as vutils
 # from torch.utils.tensorboard import SummaryWriter
 from torch.nn.parallel import DistributedDataParallel as DDP
+import wandb
 
 
 class TrainerBase:
     def __init__(self, configs):
         self.configs = configs
+        self.opt = configs
 
         # setup distributed training: self.num_gpus, self.rank
         self.setup_dist()
@@ -709,18 +711,18 @@ class TrainerDifIR(TrainerBase):
 
             return {'lq':self.lq, 'gt':self.gt}
         elif phase == 'val':
-            offset = self.configs.train.get('val_resolution', 256)
-            for key, value in data.items():
-                h, w = value.shape[2:]
-                if h > offset and w > offset:
-                    h_end = int((h // offset) * offset)
-                    w_end = int((w // offset) * offset)
-                    data[key] = value[:, :, :h_end, :w_end]
-                else:
-                    h_pad = math.ceil(h / offset) * offset - h
-                    w_pad = math.ceil(w / offset) * offset - w
-                    padding_mode = self.configs.train.get('val_padding_mode', 'reflect')
-                    data[key] = F.pad(value, pad=(0, w_pad, 0, h_pad), mode=padding_mode)
+            # offset = self.configs.train.get('val_resolution', 256)
+            # for key, value in data.items():
+            #     h, w = value.shape[2:]
+            #     if h > offset and w > offset:
+            #         h_end = int((h // offset) * offset)
+            #         w_end = int((w // offset) * offset)
+            #         data[key] = value[:, :, :h_end, :w_end]
+            #     else:
+            #         h_pad = math.ceil(h / offset) * offset - h
+            #         w_pad = math.ceil(w / offset) * offset - w
+            #         padding_mode = self.configs.train.get('val_padding_mode', 'reflect')
+            #         data[key] = F.pad(value, pad=(0, w_pad, 0, h_pad), mode=padding_mode)
             return {key:value.cuda().to(dtype=dtype) for key, value in data.items()}
         else:
             return {key:value.cuda().to(dtype=dtype) for key, value in data.items()}
@@ -848,6 +850,16 @@ class TrainerDifIR(TrainerBase):
                 log_str += 'lr:{:.2e}'.format(self.optimizer.param_groups[0]['lr'])
                 self.logger.info(log_str)
                 self.logging_metric(self.loss_mean, tag='Loss', phase=phase, add_global_step=True)
+                
+                # wandbにログ送信
+                wandb_log_dict = {}
+                for jj, current_record in enumerate(record_steps):
+                    wandb_log_dict[f'Loss/t{current_record}'] = self.loss_mean['loss'][jj].item()
+                    wandb_log_dict[f'MSE/t{current_record}'] = self.loss_mean['mse'][jj].item()
+                wandb_log_dict['lr'] = self.optimizer.param_groups[0]['lr']
+                wandb_log_dict['step'] = self.current_iters
+                wandb.log(wandb_log_dict)
+    
             if self.current_iters % self.configs.train.log_freq[1] == 0:
                 self.logging_image(batch['lq'], tag='lq', phase=phase, add_global_step=False)
                 self.logging_image(batch['gt'], tag='gt', phase=phase, add_global_step=False)
@@ -871,12 +883,20 @@ class TrainerDifIR(TrainerBase):
                 self.logger.info("="*100)
 
     def validation(self, phase='val'):
+        # if self.rank == 0:
+        #     if self.configs.train.use_ema_val:
+        #         self.reload_ema_model()
+        #         self.ema_model.eval()
+        #     else:
+        #         self.model.eval()                
         if self.rank == 0:
             if self.configs.train.use_ema_val:
                 self.reload_ema_model()
                 self.ema_model.eval()
+                model_for_inference = self.ema_model
             else:
                 self.model.eval()
+                model_for_inference = self.model
 
             indices = np.linspace(
                     0,
@@ -889,82 +909,218 @@ class TrainerDifIR(TrainerBase):
                 indices.append(self.base_diffusion.num_timesteps-1)
             batch_size = self.configs.train.batch[1]
             num_iters_epoch = math.ceil(len(self.datasets[phase]) / batch_size)
-            mean_psnr = mean_lpips = 0
+            #mean_psnr = mean_lpips = 0
+            # for ii, data in enumerate(self.dataloaders[phase]):
+            #     data = self.prepare_data(data, phase='val')
+            #     if 'gt' in data:
+            #         im_lq, im_gt = data['lq'], data['gt']
+            #     else:
+            #         im_lq = data['lq']
+            #     num_iters = 0
+            #     if self.configs.model.params.cond_lq:
+            #         model_kwargs = {'lq':data['lq'],}
+            #         if 'mask' in data:
+            #             model_kwargs['mask'] = data['mask']
+            #     else:
+            #         model_kwargs = None
+            #     tt = torch.tensor(
+            #             [self.base_diffusion.num_timesteps, ]*im_lq.shape[0],
+            #             dtype=torch.int64,
+            #             ).cuda()
+            #     for sample in self.base_diffusion.p_sample_loop_progressive(
+            #             y=im_lq,
+            #             model=self.ema_model if self.configs.train.use_ema_val else self.model,
+            #             first_stage_model=self.autoencoder,
+            #             noise=None,
+            #             clip_denoised=True if self.autoencoder is None else False,
+            #             model_kwargs=model_kwargs,
+            #             device=f"cuda:{self.rank}",
+            #             progress=False,
+            #             ):
+            #         sample_decode = {}
+            #         if num_iters in indices:
+            #             for key, value in sample.items():
+            #                 if key in ['sample', ]:
+            #                     sample_decode[key] = self.base_diffusion.decode_first_stage(
+            #                             value,
+            #                             self.autoencoder,
+            #                             ).clamp(-1.0, 1.0)
+            #             im_sr_progress = sample_decode['sample']
+            #             if num_iters + 1 == 1:
+            #                 im_sr_all = im_sr_progress
+            #             else:
+            #                 im_sr_all = torch.cat((im_sr_all, im_sr_progress), dim=1)
+            #         num_iters += 1
+            #         tt -= 1
+
+            #     if 'gt' in data:
+            #         mean_psnr += util_image.batch_PSNR(
+            #                 sample_decode['sample'] * 0.5 + 0.5,
+            #                 im_gt * 0.5 + 0.5,
+            #                 ycbcr=self.configs.train.val_y_channel,
+            #                 )
+            #         mean_lpips += self.lpips_loss(
+            #                 sample_decode['sample'],
+            #                 im_gt,
+            #                 ).sum().item()
             for ii, data in enumerate(self.dataloaders[phase]):
                 data = self.prepare_data(data, phase='val')
                 if 'gt' in data:
                     im_lq, im_gt = data['lq'], data['gt']
                 else:
                     im_lq = data['lq']
-                num_iters = 0
-                if self.configs.model.params.cond_lq:
-                    model_kwargs = {'lq':data['lq'],}
-                    if 'mask' in data:
-                        model_kwargs['mask'] = data['mask']
-                else:
-                    model_kwargs = None
-                tt = torch.tensor(
-                        [self.base_diffusion.num_timesteps, ]*im_lq.shape[0],
-                        dtype=torch.int64,
-                        ).cuda()
-                for sample in self.base_diffusion.p_sample_loop_progressive(
-                        y=im_lq,
-                        model=self.ema_model if self.configs.train.use_ema_val else self.model,
-                        first_stage_model=self.autoencoder,
-                        noise=None,
-                        clip_denoised=True if self.autoencoder is None else False,
-                        model_kwargs=model_kwargs,
-                        device=f"cuda:{self.rank}",
-                        progress=False,
-                        ):
-                    sample_decode = {}
-                    if num_iters in indices:
-                        for key, value in sample.items():
-                            if key in ['sample', ]:
-                                sample_decode[key] = self.base_diffusion.decode_first_stage(
-                                        value,
-                                        self.autoencoder,
-                                        ).clamp(-1.0, 1.0)
-                        im_sr_progress = sample_decode['sample']
-                        if num_iters + 1 == 1:
-                            im_sr_all = im_sr_progress
-                        else:
-                            im_sr_all = torch.cat((im_sr_all, im_sr_progress), dim=1)
-                    num_iters += 1
-                    tt -= 1
+
+                # --- タイル処理の導入 ---
+                # 画像サイズ取得
+                batch, channel, height, width = im_lq.shape
+                scale = self.configs.train.scale  # アップスケール倍率
+
+                # 出力用の空テンソル準備
+                output_height = height * scale
+                output_width = width * scale
+                output = im_lq.new_zeros((batch, channel, output_height, output_width))
+                accumulator = im_lq.new_zeros((batch, channel, output_height, output_width))
+
+                division_size = self.opt['division']['division_size']
+                overlap_size = self.opt['division']['overlap_size']
+
+                tiles_x = math.ceil((width - overlap_size) / (division_size - overlap_size))
+                tiles_y = math.ceil((height - overlap_size) / (division_size - overlap_size))
+
+                for y in range(tiles_y):
+                    for x in range(tiles_x):
+                        ofs_x = x * (division_size - overlap_size)
+                        ofs_y = y * (division_size - overlap_size)
+
+                        input_start_x = ofs_x
+                        input_end_x = min(ofs_x + division_size, width)
+                        input_start_y = ofs_y
+                        input_end_y = min(ofs_y + division_size, height)
+
+                        input_tile = im_lq[:, :, input_start_y:input_end_y, input_start_x:input_end_x]
+
+                        # パディング（division_processと同様）
+                        tile_w = input_end_x - input_start_x
+                        tile_h = input_end_y - input_start_y
+                        if tile_w < division_size or tile_h < division_size:
+                            padding_right = division_size - tile_w
+                            padding_bottom = division_size - tile_h
+                            input_tile = F.pad(input_tile, (0, padding_right, 0, padding_bottom), "constant", 0)
+
+                        # ここでbase_diffusionによる推論をタイルごとに行う
+                        # 条件付きモデルの引数などは必要に応じて追加
+                        model_kwargs = {'lq': input_tile} if self.configs.model.params.cond_lq else None
+
+                        # num_timestepsをtensor化
+                        tt = torch.tensor([self.base_diffusion.num_timesteps]*input_tile.shape[0], dtype=torch.int64).cuda()
+
+                        # タイルのp_sample_loop_progressiveの処理（1タイル分だけ）
+                        # ここは１回で完結するように調整が必要
+                        # 簡易的には最後のsampleだけを取得する方法でOK
+                        output_tile = None
+                        for sample in self.base_diffusion.p_sample_loop_progressive(
+                                y=input_tile,
+                                model=model_for_inference,
+                                first_stage_model=self.autoencoder,
+                                noise=None,
+                                clip_denoised=True if self.autoencoder is None else False,
+                                model_kwargs=model_kwargs,
+                                device=f"cuda:{self.rank}",
+                                progress=False):
+                            # 1タイル分の最終sampleを取得
+                            output_tile_raw = sample['sample']
+                            output_tile = self.base_diffusion.decode_first_stage(output_tile_raw, self.autoencoder).clamp(-1.0, 1.0)
+
+                        # 出力画像の対応部分に貼り付ける
+                        output_start_x = input_start_x * scale
+                        output_end_x = input_end_x * scale
+                        output_start_y = input_start_y * scale
+                        output_end_y = input_end_y * scale
+
+                        # サイズがpadで大きくなってる可能性があるので切り詰め
+                        crop_w = (output_end_x - output_start_x)
+                        crop_h = (output_end_y - output_start_y)
+                        output_tile = output_tile[:, :, :crop_h, :crop_w]
+
+                        output[:, :, output_start_y:output_end_y, output_start_x:output_end_x] += output_tile
+                        accumulator[:, :, output_start_y:output_end_y, output_start_x:output_end_x] += 1
+
+                # 重なり部分の平均化
+                output /= accumulator
+
+                # 以降は output がアップスケール後の画像として扱う
+                sum_psnr = sum_ssim = 0
+                count_psnr = count_ssim = 0
 
                 if 'gt' in data:
-                    mean_psnr += util_image.batch_PSNR(
-                            sample_decode['sample'] * 0.5 + 0.5,
-                            im_gt * 0.5 + 0.5,
-                            ycbcr=self.configs.train.val_y_channel,
-                            )
-                    mean_lpips += self.lpips_loss(
-                            sample_decode['sample'],
-                            im_gt,
-                            ).sum().item()
+                    # mean_psnr += util_image.batch_PSNR(
+                    #     output * 0.5 + 0.5,
+                    #     im_gt * 0.5 + 0.5,
+                    #     ycbcr=self.configs.train.val_y_channel,
+                    # )
+                    psnr, count = util_image.calculate_psnr_mask(
+                        output * 0.5 + 0.5,
+                        im_gt * 0.5 + 0.5,
+                        data['lung_mask'],
+                        crop_border=4,
+                        test_y_channel=self.configs.train.val_y_channel,
+                    )
+                    sum_psnr += psnr
+                    count_psnr += count
+                    # mean_lpips += self.lpips_loss(
+                    #     output,
+                    #     im_gt,
+                    # ).sum().item()
+                    # mean_ssim += util_image.batch_SSIM(
+                    #     output * 0.5 + 0.5,
+                    #     im_gt * 0.5 + 0.5,
+                    #     ycbcr=self.configs.train.val_y_channel,
+                    # )
+                    ssim, count = util_image.calculate_ssim_mask(
+                        output * 0.5 + 0.5,
+                        im_gt * 0.5 + 0.5,
+                        data['lung_mask'],
+                        crop_border=4,
+                        test_y_channel=self.configs.train.val_y_channel,
+                    )
+                    sum_ssim += ssim
+                    count_ssim += count
 
                 if (ii + 1) % self.configs.train.log_freq[2] == 0:
                     self.logger.info(f'Validation: {ii+1:02d}/{num_iters_epoch:02d}...')
 
-                    im_sr_all = rearrange(im_sr_all, 'b (k c) h w -> (b k) c h w', c=im_lq.shape[1])
-                    self.logging_image(
-                            im_sr_all,
-                            tag='progress',
-                            phase=phase,
-                            add_global_step=False,
-                            nrow=len(indices),
-                            )
+                    # im_sr_all = rearrange(im_sr_all, 'b (k c) h w -> (b k) c h w', c=im_lq.shape[1])
+                    # self.logging_image(
+                    #         im_sr_all,
+                    #         tag='progress',
+                    #         phase=phase,
+                    #         add_global_step=False,
+                    #         nrow=len(indices),
+                    #         )
+                    self.logging_image(output, tag='sr', phase=phase, add_global_step=False)
                     if 'gt' in data:
                         self.logging_image(im_gt, tag='gt', phase=phase, add_global_step=False)
                     self.logging_image(im_lq, tag='lq', phase=phase, add_global_step=True)
 
             if 'gt' in data:
-                mean_psnr /= len(self.datasets[phase])
-                mean_lpips /= len(self.datasets[phase])
-                self.logger.info(f'Validation Metric: PSNR={mean_psnr:5.2f}, LPIPS={mean_lpips:6.4f}...')
+                #mean_psnr /= len(self.datasets[phase])
+                mean_psnr = sum_psnr/count_psnr
+                #mean_lpips /= len(self.datasets[phase])
+                #mean_ssim /= len(self.datasets[phase])
+                mean_ssim = sum_ssim/count_ssim
+                #self.logger.info(f'Validation Metric: PSNR={mean_psnr:5.2f}, LPIPS={mean_lpips:6.4f}...')
+                self.logger.info(f'Validation Metric: PSNR={mean_psnr:5.2f}, SSIM={mean_ssim:6.4f}...')
                 self.logging_metric(mean_psnr, tag='PSNR', phase=phase, add_global_step=False)
-                self.logging_metric(mean_lpips, tag='LPIPS', phase=phase, add_global_step=True)
+                #self.logging_metric(mean_lpips, tag='LPIPS', phase=phase, add_global_step=True)
+                self.logging_metric(mean_ssim, tag='SSIM', phase=phase, add_global_step=False)
+                
+            # === WandBログ送信 ===
+            wandb_log_dict = {
+                f'{phase}/PSNR': mean_psnr,
+                f'{phase}/SSIM': mean_ssim,
+                'step': self.current_iters  # ← グローバルステップで送信（調整可能）
+            }
+            wandb.log(wandb_log_dict)
 
             self.logger.info("="*100)
 

@@ -1,0 +1,1540 @@
+/usr/local/lib/python3.8/dist-packages/albumentations/__init__.py:13: UserWarning: A new version of Albumentations is available: 2.0.8 (you have 1.4.18). Upgrade using: pip install -U albumentations. To disable automatic update checks, set the environment variable NO_ALBUMENTATIONS_UPDATE to 1.
+  check_for_updates()
+trainer:
+  target: trainer.TrainerDifIR
+model:
+  target: models.unet.UNetModelSwin
+  ckpt_path: null
+  params:
+    image_size: 64
+    in_channels: 3
+    model_channels: 160
+    out_channels: 3
+    attention_resolutions:
+    - 64
+    - 32
+    - 16
+    - 8
+    dropout: 0
+    channel_mult:
+    - 1
+    - 2
+    - 2
+    - 4
+    num_res_blocks:
+    - 2
+    - 2
+    - 2
+    - 2
+    conv_resample: true
+    dims: 2
+    use_fp16: false
+    num_head_channels: 32
+    use_scale_shift_norm: true
+    resblock_updown: false
+    swin_depth: 2
+    swin_embed_dim: 192
+    window_size: 8
+    mlp_ratio: 4
+    cond_lq: true
+    lq_size: 64
+diffusion:
+  target: models.script_util.create_gaussian_diffusion
+  params:
+    sf: 4
+    schedule_name: exponential
+    schedule_kwargs:
+      power: 0.3
+    etas_end: 0.99
+    steps: 15
+    min_noise_level: 0.04
+    kappa: 2.0
+    weighted_mse: false
+    predict_type: xstart
+    timestep_respacing: null
+    scale_factor: 1.0
+    normalize_input: true
+    latent_flag: true
+autoencoder:
+  target: ldm.models.autoencoder.VQModelTorch
+  ckpt_path: weights/autoencoder_vq_f4.pth
+  use_fp16: true
+  tune_decoder: false
+  params:
+    lora_tune_decoder: false
+    embed_dim: 3
+    n_embed: 8192
+    ddconfig:
+      double_z: false
+      z_channels: 3
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult:
+      - 1
+      - 2
+      - 4
+      num_res_blocks: 2
+      attn_resolutions: []
+      dropout: 0.0
+      padding_mode: zeros
+degradation:
+  sf: 4
+  resize_prob:
+  - 0.2
+  - 0.7
+  - 0.1
+  resize_range:
+  - 0.15
+  - 1.5
+  gaussian_noise_prob: 0.5
+  noise_range:
+  - 1
+  - 30
+  poisson_scale_range:
+  - 0.05
+  - 3.0
+  gray_noise_prob: 0.4
+  jpeg_range:
+  - 30
+  - 95
+  second_order_prob: 0.5
+  second_blur_prob: 0.8
+  resize_prob2:
+  - 0.3
+  - 0.4
+  - 0.3
+  resize_range2:
+  - 0.3
+  - 1.2
+  gaussian_noise_prob2: 0.5
+  noise_range2:
+  - 1
+  - 25
+  poisson_scale_range2:
+  - 0.05
+  - 2.5
+  gray_noise_prob2: 0.4
+  jpeg_range2:
+  - 30
+  - 95
+  gt_size: 256
+  resize_back: false
+  use_sharp: false
+data:
+  train:
+    type: PairedImageDataset
+    params:
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        io_backend:
+          type: disk
+        gt_size: 256
+        use_hflip: true
+        use_rot: true
+        scale: 4
+        phase: train
+  val:
+    type: PairedImageDataset
+    params:
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        io_backend:
+          type: disk
+        scale: 4
+        phase: val
+train:
+  lr: 5.0e-05
+  lr_min: 2.0e-05
+  lr_schedule: null
+  warmup_iterations: 5000
+  batch:
+  - 8
+  - 1
+  microbatch: 8
+  num_workers: 4
+  prefetch_factor: 2
+  weight_decay: 0
+  ema_rate: 0.999
+  iterations: 300000
+  save_freq: 10000
+  log_freq:
+  - 200
+  - 2000
+  - 1
+  local_logging: true
+  tf_logging: false
+  use_ema_val: true
+  val_freq: 200
+  val_y_channel: true
+  val_resolution: ${model.params.lq_size}
+  val_padding_mode: reflect
+  use_amp: true
+  seed: 123456
+  global_seeding: false
+  compile:
+    flag: false
+    mode: reduce-overhead
+  scale: 4
+division:
+  division_size: 64
+  overlap_size: 4
+logger:
+  wandb:
+    project: experiment5
+    name: ronbunnomama
+    id: null
+save_dir: results
+resume: ''
+cfg_path: configs/realsr_swinunet_realesrgan256.yaml
+/usr/local/lib/python3.8/dist-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/usr/local/lib/python3.8/dist-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3526.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+
+Number of parameters: 118.59M
+Restoring autoencoder from weights/autoencoder_vq_f4.pth
+building MemoryEfficientAttnBlock with 512 in_channels...
+Working with z of shape (1, 3, 64, 64) = 12288 dimensions.
+building MemoryEfficientAttnBlock with 512 in_channels...
+Loading autoencoder from weights/autoencoder_vq_f4.pth...
+Loaded Done
+Loading LIIPS Metric: vgg...
+Setting up [LPIPS] perceptual loss: trunk [vgg], v[0.1], spatial [off]
+/usr/local/lib/python3.8/dist-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=VGG16_Weights.IMAGENET1K_V1`. You can also use `weights=VGG16_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+Loading model from: /usr/local/lib/python3.8/dist-packages/lpips/weights/v0.1/vgg.pth
+Loading dataset: 100%|██████████████████████████████| 60/60 [00:14<00:00,  4.28file/s]
+Loading dataset: 100%|██████████████████████████████| 60/60 [00:13<00:00,  4.32file/s]
+Number of images in train data set: 60
+Number of images in val data set: 60
+Train: 000200/300000, Loss/MSE: t(1):8.2e-01/8.2e-01, t(8):8.8e-01/8.8e-01, t(15):8.9e-01/8.9e-01, lr:1.99e-06
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 88.51329
+masked_img stats:
+  min: 62.07264
+  max: 172.22615
+  mean: 112.610085
+  shape: (341684,)
+  dtype: float32
+  non-zero count: 341684
+masked_img2 stats:
+  min: 61.38707
+  max: 235.0
+  mean: 129.47687
+0.2755319461004812
+15.101303046932514
+Validation: 01/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 90.64234
+masked_img stats:
+  min: 69.70165
+  max: 190.44002
+  mean: 111.58376
+  shape: (619761,)
+  dtype: float32
+  non-zero count: 619761
+masked_img2 stats:
+  min: 61.40263
+  max: 235.0
+  mean: 126.27726
+0.3049885219645863
+15.399331145169795
+Validation: 02/60...
+img stats:
+  min: 9.581315
+  max: 255.0
+  mean: 92.0314
+masked_img stats:
+  min: 66.47545
+  max: 206.96207
+  mean: 111.291115
+  shape: (879526,)
+  dtype: float32
+  non-zero count: 879526
+masked_img2 stats:
+  min: 51.60014
+  max: 235.0
+  mean: 123.01798
+0.3332797562458005
+16.0951314700828
+Validation: 03/60...
+img stats:
+  min: 20.360783
+  max: 255.0
+  mean: 92.92784
+masked_img stats:
+  min: 69.89503
+  max: 201.1283
+  mean: 109.84211
+  shape: (1139305,)
+  dtype: float32
+  non-zero count: 1139305
+masked_img2 stats:
+  min: 49.966396
+  max: 235.0
+  mean: 118.17207
+0.34345642159842904
+16.929952534082247
+Validation: 04/60...
+img stats:
+  min: 13.464486
+  max: 255.0
+  mean: 94.26691
+masked_img stats:
+  min: 74.22899
+  max: 223.46931
+  mean: 110.29225
+  shape: (1345068,)
+  dtype: float32
+  non-zero count: 1345068
+masked_img2 stats:
+  min: 55.054348
+  max: 235.0
+  mean: 115.45502
+0.3687823645525021
+17.484603995245596
+Validation: 05/60...
+img stats:
+  min: 2.876005
+  max: 255.0
+  mean: 95.3719
+masked_img stats:
+  min: 63.90498
+  max: 229.71088
+  mean: 110.008095
+  shape: (1467097,)
+  dtype: float32
+  non-zero count: 1467097
+masked_img2 stats:
+  min: 58.85087
+  max: 235.0
+  mean: 115.08362
+0.3620343443217831
+17.60293180565786
+Validation: 06/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 95.92081
+masked_img stats:
+  min: 70.40316
+  max: 213.48839
+  mean: 109.50579
+  shape: (1587141,)
+  dtype: float32
+  non-zero count: 1587141
+masked_img2 stats:
+  min: 51.709057
+  max: 235.0
+  mean: 116.002205
+0.3660477476727529
+17.55404527941518
+Validation: 07/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 96.72099
+masked_img stats:
+  min: 69.01795
+  max: 200.60529
+  mean: 109.77133
+  shape: (1662142,)
+  dtype: float32
+  non-zero count: 1662142
+masked_img2 stats:
+  min: 50.713253
+  max: 235.0
+  mean: 117.35588
+0.3644144044554309
+17.44564182998485
+Validation: 08/60...
+img stats:
+  min: 2.2087379
+  max: 255.0
+  mean: 96.887344
+masked_img stats:
+  min: 74.821625
+  max: 208.2841
+  mean: 109.66715
+  shape: (1724076,)
+  dtype: float32
+  non-zero count: 1724076
+masked_img2 stats:
+  min: 53.140537
+  max: 235.0
+  mean: 116.27801
+0.36162802561038626
+17.640923853856727
+Validation: 09/60...
+img stats:
+  min: 10.899449
+  max: 255.0
+  mean: 96.95679
+masked_img stats:
+  min: 63.916004
+  max: 223.29628
+  mean: 109.97089
+  shape: (1747931,)
+  dtype: float32
+  non-zero count: 1747931
+masked_img2 stats:
+  min: 55.08547
+  max: 235.0
+  mean: 114.76083
+0.35738884257174564
+18.00603639107653
+Validation: 10/60...
+img stats:
+  min: 2.838121
+  max: 255.0
+  mean: 96.28447
+masked_img stats:
+  min: 72.09032
+  max: 227.1728
+  mean: 109.02982
+  shape: (1774651,)
+  dtype: float32
+  non-zero count: 1774651
+masked_img2 stats:
+  min: 56.392467
+  max: 235.0
+  mean: 112.396164
+0.36668744800712466
+18.379245242527805
+Validation: 11/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 96.1953
+masked_img stats:
+  min: 75.907715
+  max: 231.08847
+  mean: 108.5383
+  shape: (1807269,)
+  dtype: float32
+  non-zero count: 1807269
+masked_img2 stats:
+  min: 51.055557
+  max: 235.0
+  mean: 111.466064
+0.3720897267384291
+18.719303733371262
+Validation: 12/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 96.12681
+masked_img stats:
+  min: 69.21638
+  max: 231.00711
+  mean: 108.21964
+  shape: (1831934,)
+  dtype: float32
+  non-zero count: 1831934
+masked_img2 stats:
+  min: 57.60611
+  max: 235.0
+  mean: 111.11977
+0.3786251196181138
+18.619920785681977
+Validation: 13/60...
+img stats:
+  min: 1.9614851
+  max: 255.0
+  mean: 95.91483
+masked_img stats:
+  min: 67.28752
+  max: 222.80536
+  mean: 107.99003
+  shape: (1776219,)
+  dtype: float32
+  non-zero count: 1776219
+masked_img2 stats:
+  min: 54.867634
+  max: 235.0
+  mean: 111.44124
+0.3875733421082435
+18.108818062582117
+Validation: 14/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 95.39898
+masked_img stats:
+  min: 65.25761
+  max: 225.84325
+  mean: 107.51841
+  shape: (1732098,)
+  dtype: float32
+  non-zero count: 1732098
+masked_img2 stats:
+  min: 57.170444
+  max: 235.0
+  mean: 112.132965
+0.39421240547679415
+17.52017911274587
+Validation: 15/60...
+img stats:
+  min: 8.380678
+  max: 255.0
+  mean: 94.586494
+masked_img stats:
+  min: 70.11382
+  max: 233.28326
+  mean: 106.71176
+  shape: (1682975,)
+  dtype: float32
+  non-zero count: 1682975
+masked_img2 stats:
+  min: 58.27517
+  max: 235.0
+  mean: 112.46816
+0.4037040026210578
+17.19169692009708
+Validation: 16/60...
+img stats:
+  min: 13.817107
+  max: 255.0
+  mean: 94.07797
+masked_img stats:
+  min: 69.85415
+  max: 219.42334
+  mean: 106.52578
+  shape: (1609485,)
+  dtype: float32
+  non-zero count: 1609485
+masked_img2 stats:
+  min: 49.2351
+  max: 235.0
+  mean: 112.94957
+0.4022446757651631
+16.679278873899072
+Validation: 17/60...
+img stats:
+  min: 17.173878
+  max: 255.0
+  mean: 92.63318
+masked_img stats:
+  min: 64.09675
+  max: 221.5848
+  mean: 105.50762
+  shape: (1495938,)
+  dtype: float32
+  non-zero count: 1495938
+masked_img2 stats:
+  min: 52.393677
+  max: 235.0
+  mean: 112.02579
+0.4027165123293238
+16.463366787765935
+Validation: 18/60...
+img stats:
+  min: 8.49433
+  max: 255.0
+  mean: 91.57247
+masked_img stats:
+  min: 81.71739
+  max: 220.73514
+  mean: 105.50662
+  shape: (1297171,)
+  dtype: float32
+  non-zero count: 1297171
+masked_img2 stats:
+  min: 49.048378
+  max: 235.0
+  mean: 109.23753
+0.40039882705034635
+17.18145714859139
+Validation: 19/60...
+img stats:
+  min: 4.3630705
+  max: 255.0
+  mean: 89.77719
+masked_img stats:
+  min: 74.64109
+  max: 233.1786
+  mean: 105.22406
+  shape: (944432,)
+  dtype: float32
+  non-zero count: 944432
+masked_img2 stats:
+  min: 37.970016
+  max: 235.0
+  mean: 104.09926
+0.4158459111536728
+19.323907955367776
+Validation: 20/60...
+img stats:
+  min: 15.307083
+  max: 255.0
+  mean: 86.76062
+masked_img stats:
+  min: 73.9612
+  max: 181.00348
+  mean: 104.863045
+  shape: (357863,)
+  dtype: float32
+  non-zero count: 357863
+masked_img2 stats:
+  min: 23.99758
+  max: 235.0
+  mean: 103.60182
+0.41173570999574577
+21.63863284360762
+Validation: 21/60...
+img stats:
+  min: 12.540703
+  max: 255.0
+  mean: 94.42204
+masked_img stats:
+  min: 67.65162
+  max: 137.89703
+  mean: 105.53171
+  shape: (365313,)
+  dtype: float32
+  non-zero count: 365313
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 96.55981
+0.1842498371249856
+12.489441237709293
+Validation: 22/60...
+img stats:
+  min: 12.825672
+  max: 255.0
+  mean: 94.63263
+masked_img stats:
+  min: 65.142654
+  max: 137.48741
+  mean: 103.20177
+  shape: (571456,)
+  dtype: float32
+  non-zero count: 571456
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 85.66724
+0.20170642784155554
+12.852163130692295
+Validation: 23/60...
+img stats:
+  min: 14.093641
+  max: 255.0
+  mean: 94.47138
+masked_img stats:
+  min: 61.515465
+  max: 147.33557
+  mean: 100.91992
+  shape: (718364,)
+  dtype: float32
+  non-zero count: 718364
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 79.51836
+0.21916501972432062
+13.025199290155552
+Validation: 24/60...
+img stats:
+  min: 5.4082575
+  max: 255.0
+  mean: 94.32896
+masked_img stats:
+  min: 63.994957
+  max: 138.57431
+  mean: 100.371315
+  shape: (801763,)
+  dtype: float32
+  non-zero count: 801763
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 76.66025
+0.22708847684934935
+13.12550077422003
+Validation: 25/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 95.04554
+masked_img stats:
+  min: 62.285305
+  max: 145.776
+  mean: 100.670975
+  shape: (852754,)
+  dtype: float32
+  non-zero count: 852754
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 75.741035
+0.23472594585409348
+13.024081738879683
+Validation: 26/60...
+img stats:
+  min: 8.620286
+  max: 255.0
+  mean: 94.60484
+masked_img stats:
+  min: 63.477127
+  max: 157.49088
+  mean: 100.18886
+  shape: (892431,)
+  dtype: float32
+  non-zero count: 892431
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 73.34105
+0.24187136367605422
+13.126592582209536
+Validation: 27/60...
+img stats:
+  min: 13.655168
+  max: 255.0
+  mean: 93.801765
+masked_img stats:
+  min: 67.59432
+  max: 145.01782
+  mean: 99.441475
+  shape: (910791,)
+  dtype: float32
+  non-zero count: 910791
+masked_img2 stats:
+  min: 16.104748
+  max: 235.0
+  mean: 69.800896
+0.23528180256767453
+13.286371177520042
+Validation: 28/60...
+img stats:
+  min: 13.02377
+  max: 255.0
+  mean: 92.78504
+masked_img stats:
+  min: 68.981804
+  max: 146.46245
+  mean: 98.90031
+  shape: (905970,)
+  dtype: float32
+  non-zero count: 905970
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 65.44918
+0.23570910014853122
+13.49737028587242
+Validation: 29/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 91.91141
+masked_img stats:
+  min: 67.7133
+  max: 136.88646
+  mean: 98.516884
+  shape: (897723,)
+  dtype: float32
+  non-zero count: 897723
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 62.09479
+0.23905171967926225
+13.649645999766252
+Validation: 30/60...
+img stats:
+  min: 11.420758
+  max: 219.15385
+  mean: 91.143555
+masked_img stats:
+  min: 70.21458
+  max: 130.26776
+  mean: 98.448425
+  shape: (877746,)
+  dtype: float32
+  non-zero count: 877746
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 60.142326
+0.23654602386853393
+13.780409650672418
+Validation: 31/60...
+img stats:
+  min: 12.506102
+  max: 205.01334
+  mean: 90.60402
+masked_img stats:
+  min: 76.60363
+  max: 131.03247
+  mean: 98.18974
+  shape: (837675,)
+  dtype: float32
+  non-zero count: 837675
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 58.38252
+0.24271888985300807
+13.901504708188433
+Validation: 32/60...
+img stats:
+  min: 10.6784
+  max: 255.0
+  mean: 90.49122
+masked_img stats:
+  min: 70.48829
+  max: 137.54028
+  mean: 98.32281
+  shape: (782309,)
+  dtype: float32
+  non-zero count: 782309
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 57.466164
+0.24697567456453165
+13.8509422226252
+Validation: 33/60...
+img stats:
+  min: 12.37285
+  max: 255.0
+  mean: 90.43385
+masked_img stats:
+  min: 69.77703
+  max: 144.19789
+  mean: 98.48284
+  shape: (714063,)
+  dtype: float32
+  non-zero count: 714063
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 56.568913
+0.25118273887053
+13.833436426745113
+Validation: 34/60...
+img stats:
+  min: 8.935289
+  max: 255.0
+  mean: 90.57319
+masked_img stats:
+  min: 71.59972
+  max: 138.38422
+  mean: 98.72866
+  shape: (623826,)
+  dtype: float32
+  non-zero count: 623826
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 55.682137
+0.25600947822400044
+13.767442408828712
+Validation: 35/60...
+img stats:
+  min: 11.210007
+  max: 255.0
+  mean: 90.988304
+masked_img stats:
+  min: 73.98459
+  max: 139.70436
+  mean: 99.03797
+  shape: (505864,)
+  dtype: float32
+  non-zero count: 505864
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 54.586155
+0.25735058515625225
+13.483384324023778
+Validation: 36/60...
+img stats:
+  min: 8.727995
+  max: 254.42827
+  mean: 91.064705
+masked_img stats:
+  min: 70.71013
+  max: 139.71115
+  mean: 101.04606
+  shape: (359000,)
+  dtype: float32
+  non-zero count: 359000
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 53.013737
+0.264865326060672
+13.239961538364168
+Validation: 37/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 92.897095
+masked_img stats:
+  min: 71.76894
+  max: 155.99945
+  mean: 108.94202
+  shape: (349752,)
+  dtype: float32
+  non-zero count: 349752
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 131.29192
+0.2995019078284063
+11.417800009766152
+Validation: 38/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 94.92222
+masked_img stats:
+  min: 64.93518
+  max: 148.54416
+  mean: 109.19779
+  shape: (517302,)
+  dtype: float32
+  non-zero count: 517302
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 125.35821
+0.22795992289999373
+12.12967736913084
+Validation: 39/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 95.866356
+masked_img stats:
+  min: 62.21423
+  max: 153.70834
+  mean: 107.33597
+  shape: (780117,)
+  dtype: float32
+  non-zero count: 780117
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 108.25885
+0.2494330346872016
+13.136718659198925
+Validation: 40/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 95.79896
+masked_img stats:
+  min: 63.528164
+  max: 160.07574
+  mean: 105.51251
+  shape: (1029680,)
+  dtype: float32
+  non-zero count: 1029680
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 97.14782
+0.23380521093050502
+13.856097594765535
+Validation: 41/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 95.4385
+masked_img stats:
+  min: 68.35544
+  max: 165.6598
+  mean: 103.36585
+  shape: (1207448,)
+  dtype: float32
+  non-zero count: 1207448
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 91.60341
+0.25605197919581046
+13.867661721268622
+Validation: 42/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 95.44021
+masked_img stats:
+  min: 69.0917
+  max: 157.90105
+  mean: 102.71693
+  shape: (1320168,)
+  dtype: float32
+  non-zero count: 1320168
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 89.63532
+0.27566166912611273
+13.968071737672712
+Validation: 43/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 95.4768
+masked_img stats:
+  min: 65.57807
+  max: 158.77599
+  mean: 102.5506
+  shape: (1402315,)
+  dtype: float32
+  non-zero count: 1402315
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 87.70444
+0.2896128111967668
+13.81555525185885
+Validation: 44/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 95.374016
+masked_img stats:
+  min: 57.05527
+  max: 156.33571
+  mean: 102.073006
+  shape: (1457534,)
+  dtype: float32
+  non-zero count: 1457534
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 86.73805
+0.2963698111144532
+13.981685986523749
+Validation: 45/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 95.42984
+masked_img stats:
+  min: 64.897736
+  max: 154.4492
+  mean: 102.01616
+  shape: (1496942,)
+  dtype: float32
+  non-zero count: 1496942
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 84.20792
+0.2851650178080105
+13.929168878991117
+Validation: 46/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 94.6249
+masked_img stats:
+  min: 60.06014
+  max: 158.39348
+  mean: 101.42035
+  shape: (1527040,)
+  dtype: float32
+  non-zero count: 1527040
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 80.25591
+0.2792816565186756
+13.982629631671701
+Validation: 47/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 94.02197
+masked_img stats:
+  min: 63.795506
+  max: 161.20514
+  mean: 101.14892
+  shape: (1548449,)
+  dtype: float32
+  non-zero count: 1548449
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 76.40884
+0.2760797188508475
+14.022954325490211
+Validation: 48/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 93.43606
+masked_img stats:
+  min: 57.821346
+  max: 167.72282
+  mean: 100.737946
+  shape: (1553847,)
+  dtype: float32
+  non-zero count: 1553847
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 73.538086
+0.2747870006041646
+14.044012754334588
+Validation: 49/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 92.89877
+masked_img stats:
+  min: 66.81716
+  max: 156.83185
+  mean: 100.26173
+  shape: (1555599,)
+  dtype: float32
+  non-zero count: 1555599
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 71.43118
+0.2772288096845584
+14.054291152210482
+Validation: 50/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 92.19357
+masked_img stats:
+  min: 65.69078
+  max: 170.19177
+  mean: 99.52515
+  shape: (1555316,)
+  dtype: float32
+  non-zero count: 1555316
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 69.465546
+0.2829696345064598
+14.197734273300245
+Validation: 51/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 91.95546
+masked_img stats:
+  min: 69.472786
+  max: 158.08974
+  mean: 99.15189
+  shape: (1540992,)
+  dtype: float32
+  non-zero count: 1540992
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 68.20601
+0.2831811221075586
+14.179707622408902
+Validation: 52/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 91.264305
+masked_img stats:
+  min: 68.57581
+  max: 182.28653
+  mean: 98.20869
+  shape: (1522807,)
+  dtype: float32
+  non-zero count: 1522807
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 66.11245
+0.2919044668900713
+14.325724422482962
+Validation: 53/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 90.988
+masked_img stats:
+  min: 70.86696
+  max: 148.51326
+  mean: 97.63564
+  shape: (1483387,)
+  dtype: float32
+  non-zero count: 1483387
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 65.03405
+0.29805594923163997
+14.37725357879363
+Validation: 54/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 91.24975
+masked_img stats:
+  min: 68.039185
+  max: 168.48083
+  mean: 97.737305
+  shape: (1418158,)
+  dtype: float32
+  non-zero count: 1418158
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 64.46248
+0.29928838972365907
+14.155144497827635
+Validation: 55/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 91.07004
+masked_img stats:
+  min: 71.009575
+  max: 142.5794
+  mean: 97.888916
+  shape: (1306224,)
+  dtype: float32
+  non-zero count: 1306224
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 63.074444
+0.3073781830928096
+14.077426961860917
+Validation: 56/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 91.0679
+masked_img stats:
+  min: 69.61815
+  max: 150.14606
+  mean: 98.444916
+  shape: (1135229,)
+  dtype: float32
+  non-zero count: 1135229
+masked_img2 stats:
+  min: 17.5883
+  max: 235.0
+  mean: 62.14143
+0.3143759850467336
+13.964134169920271
+Validation: 57/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 90.404175
+masked_img stats:
+  min: 71.37194
+  max: 143.02159
+  mean: 98.10649
+  shape: (947564,)
+  dtype: float32
+  non-zero count: 947564
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 59.03802
+0.344961808228649
+13.979367602428717
+Validation: 58/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 89.9189
+masked_img stats:
+  min: 70.01752
+  max: 141.35179
+  mean: 98.45669
+  shape: (680883,)
+  dtype: float32
+  non-zero count: 680883
+masked_img2 stats:
+  min: 16.0
+  max: 235.0
+  mean: 56.34417
+0.3599311989906783
+13.964767822661523
+Validation: 59/60...
+img stats:
+  min: 0.0
+  max: 173.98372
+  mean: 89.47918
+masked_img stats:
+  min: 79.72792
+  max: 116.538025
+  mean: 99.67752
+  shape: (384561,)
+  dtype: float32
+  non-zero count: 384561
+masked_img2 stats:
+  min: 20.703213
+  max: 235.0
+  mean: 53.670933
+0.39716245931423294
+13.94492214695999
+Validation: 60/60...
+Validation Metric: PSNR=13.94, SSIM=0.3972...
+====================================================================================================
+Train: 000400/300000, Loss/MSE: t(1):2.9e-01/2.9e-01, t(8):4.8e-01/4.8e-01, t(15):7.4e-01/7.4e-01, lr:3.99e-06
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 48.784485
+masked_img stats:
+  min: 49.710438
+  max: 182.2986
+  mean: 99.31276
+  shape: (341684,)
+  dtype: float32
+  non-zero count: 341684
+masked_img2 stats:
+  min: 61.38707
+  max: 235.0
+  mean: 129.47687
+0.29085627100017886
+15.099900776972216
+Validation: 01/60...
+img stats:
+  min: 1.293291
+  max: 255.0
+  mean: 53.3867
+masked_img stats:
+  min: 46.902664
+  max: 220.12381
+  mean: 98.17447
+  shape: (619761,)
+  dtype: float32
+  non-zero count: 619761
+masked_img2 stats:
+  min: 61.40263
+  max: 235.0
+  mean: 126.27726
+0.32104972371356527
+15.53217010471515
+Validation: 02/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 55.826557
+masked_img stats:
+  min: 48.21836
+  max: 197.81645
+  mean: 95.63032
+  shape: (879526,)
+  dtype: float32
+  non-zero count: 879526
+masked_img2 stats:
+  min: 51.60014
+  max: 235.0
+  mean: 123.01798
+0.34647948771691434
+15.883638009929356
+Validation: 03/60...
+img stats:
+  min: 1.0424285
+  max: 255.0
+  mean: 57.107086
+masked_img stats:
+  min: 48.531513
+  max: 208.83733
+  mean: 91.7876
+  shape: (1139305,)
+  dtype: float32
+  non-zero count: 1139305
+masked_img2 stats:
+  min: 49.966396
+  max: 235.0
+  mean: 118.17207
+0.3525017659738135
+16.29823283038999
+Validation: 04/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 58.448997
+masked_img stats:
+  min: 43.3968
+  max: 223.92467
+  mean: 90.491295
+  shape: (1345068,)
+  dtype: float32
+  non-zero count: 1345068
+masked_img2 stats:
+  min: 55.054348
+  max: 235.0
+  mean: 115.45502
+0.37849776569942023
+16.74290870554391
+Validation: 05/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 59.588654
+masked_img stats:
+  min: 44.54979
+  max: 220.66188
+  mean: 90.00015
+  shape: (1467097,)
+  dtype: float32
+  non-zero count: 1467097
+masked_img2 stats:
+  min: 58.85087
+  max: 235.0
+  mean: 115.08362
+0.3707352190147635
+16.70787690976564
+Validation: 06/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 60.841133
+masked_img stats:
+  min: 40.598717
+  max: 233.16298
+  mean: 90.24022
+  shape: (1587141,)
+  dtype: float32
+  non-zero count: 1587141
+masked_img2 stats:
+  min: 51.709057
+  max: 235.0
+  mean: 116.002205
+0.37488768821698154
+16.585026340367328
+Validation: 07/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 62.36696
+masked_img stats:
+  min: 39.239277
+  max: 219.04417
+  mean: 91.67121
+  shape: (1662142,)
+  dtype: float32
+  non-zero count: 1662142
+masked_img2 stats:
+  min: 50.713253
+  max: 235.0
+  mean: 117.35588
+0.3730999303201055
+16.602874374441626
+Validation: 08/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 62.592915
+masked_img stats:
+  min: 41.951626
+  max: 207.26598
+  mean: 91.39675
+  shape: (1724076,)
+  dtype: float32
+  non-zero count: 1724076
+masked_img2 stats:
+  min: 53.140537
+  max: 235.0
+  mean: 116.27801
+0.3719479528415643
+16.795129757660217
+Validation: 09/60...
+img stats:
+  min: 0.0
+  max: 255.0
+  mean: 62.243374
+masked_img stats:
+  min: 40.38801
+  max: 223.5211
+  mean: 90.51062
+  shape: (1747931,)
+  dtype: float32
+  non-zero count: 1747931
+masked_img2 stats:
+  min: 55.08547
+  max: 235.0
+  mean: 114.76083
+0.3663945700063453
+16.914868363191985
+Validation: 10/60...
+Error in sys.excepthook:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.8/dist-packages/wandb/sdk/lib/exit_hooks.py", line 52, in exc_handler
+    traceback.print_exception(exc_type, exc, tb)
+  File "/usr/lib/python3.8/traceback.py", line 103, in print_exception
+    for line in TracebackException(
+  File "/usr/local/lib/python3.8/dist-packages/exceptiongroup/_formatting.py", line 75, in __init__
+    def __init__(
+KeyboardInterrupt
+
+Original exception was:
+Traceback (most recent call last):
+  File "main.py", line 71, in <module>
+    trainer.train()
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 322, in train
+    self.validation()
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 1021, in validation
+    for sample in self.base_diffusion.p_sample_loop_progressive(
+  File "/workspace/lung/hiratsuka/ResShift/models/gaussian_diffusion.py", line 461, in p_sample_loop_progressive
+    out = self.p_sample(
+  File "/workspace/lung/hiratsuka/ResShift/models/gaussian_diffusion.py", line 349, in p_sample
+    out = self.p_mean_variance(
+  File "/workspace/lung/hiratsuka/ResShift/models/respace.py", line 44, in p_mean_variance
+    return super().p_mean_variance(self._wrap_model(model), *args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/gaussian_diffusion.py", line 266, in p_mean_variance
+    model_output = model(self._scale_input(x_t, t), t, **model_kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/respace.py", line 63, in __call__
+    return self.model(x, new_ts, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/unet.py", line 887, in forward
+    h = module(h, emb)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/unet.py", line 48, in forward
+    x = layer(x, emb)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/unet.py", line 201, in forward
+    h = out_norm(h) * (1 + scale) + shift
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/workspace/lung/hiratsuka/ResShift/models/basic_ops.py", line 17, in forward
+    return super().forward(x.float()).type(x.dtype)
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/modules/normalization.py", line 279, in forward
+    return F.group_norm(
+  File "/usr/local/lib/python3.8/dist-packages/torch/nn/functional.py", line 2558, in group_norm
+    return torch.group_norm(input, num_groups, weight, bias, eps, torch.backends.cudnn.enabled)
+KeyboardInterrupt

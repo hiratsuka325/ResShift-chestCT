@@ -1,0 +1,17 @@
+{"time":"2025-10-17T23:55:27.730444027+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/workspace/lung/hiratsuka/ResShift/wandb/run-20251017_235527-tuzr71mf/logs/debug-core.log"}
+{"time":"2025-10-17T23:55:31.021674274+09:00","level":"INFO","msg":"created new stream","id":"tuzr71mf"}
+{"time":"2025-10-17T23:55:31.021728056+09:00","level":"INFO","msg":"stream: started","id":"tuzr71mf"}
+{"time":"2025-10-17T23:55:31.021746171+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"tuzr71mf"}
+{"time":"2025-10-17T23:55:31.021754507+09:00","level":"INFO","msg":"sender: started","stream_id":"tuzr71mf"}
+{"time":"2025-10-17T23:55:31.021801265+09:00","level":"INFO","msg":"handler: started","stream_id":"tuzr71mf"}
+{"time":"2025-10-17T23:55:31.548639316+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-10-18T01:14:42.157253871+09:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/s258962y-tokyo-unhiversity-of-agriculture-and-technology/experiment5/tuzr71mf/file_stream\": dial tcp: lookup api.wandb.ai on 192.168.65.1:53: read udp 172.17.0.2:55492->192.168.65.1:53: i/o timeout"}
+{"time":"2025-10-18T01:16:27.156238501+09:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/s258962y-tokyo-unhiversity-of-agriculture-and-technology/experiment5/tuzr71mf/file_stream\": dial tcp: lookup api.wandb.ai on 192.168.65.1:53: read udp 172.17.0.2:45985->192.168.65.1:53: i/o timeout"}
+{"time":"2025-10-18T01:54:13.565622337+09:00","level":"INFO","msg":"stream: closing","id":"tuzr71mf"}
+{"time":"2025-10-18T01:54:13.565699965+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-10-18T01:54:13.566487211+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-10-18T01:54:19.777585361+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-10-18T01:54:22.341967542+09:00","level":"INFO","msg":"handler: closed","stream_id":"tuzr71mf"}
+{"time":"2025-10-18T01:54:22.342042014+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"tuzr71mf"}
+{"time":"2025-10-18T01:54:22.34206116+09:00","level":"INFO","msg":"sender: closed","stream_id":"tuzr71mf"}
+{"time":"2025-10-18T01:54:22.347700875+09:00","level":"INFO","msg":"stream: closed","id":"tuzr71mf"}

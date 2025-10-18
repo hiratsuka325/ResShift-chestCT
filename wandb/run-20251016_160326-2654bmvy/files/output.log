@@ -1,0 +1,232 @@
+/usr/local/lib/python3.8/dist-packages/albumentations/__init__.py:13: UserWarning: A new version of Albumentations is available: 2.0.8 (you have 1.4.18). Upgrade using: pip install -U albumentations. To disable automatic update checks, set the environment variable NO_ALBUMENTATIONS_UPDATE to 1.
+  check_for_updates()
+trainer:
+  target: trainer.TrainerDifIR
+model:
+  target: models.unet.UNetModelSwin
+  ckpt_path: null
+  params:
+    image_size: 64
+    in_channels: 3
+    model_channels: 160
+    out_channels: 3
+    attention_resolutions:
+    - 64
+    - 32
+    - 16
+    - 8
+    dropout: 0
+    channel_mult:
+    - 1
+    - 2
+    - 2
+    - 4
+    num_res_blocks:
+    - 2
+    - 2
+    - 2
+    - 2
+    conv_resample: true
+    dims: 2
+    use_fp16: false
+    num_head_channels: 32
+    use_scale_shift_norm: true
+    resblock_updown: false
+    swin_depth: 2
+    swin_embed_dim: 192
+    window_size: 8
+    mlp_ratio: 4
+    cond_lq: true
+    lq_size: 64
+diffusion:
+  target: models.script_util.create_gaussian_diffusion
+  params:
+    sf: 4
+    schedule_name: exponential
+    schedule_kwargs:
+      power: 0.3
+    etas_end: 0.99
+    steps: 15
+    min_noise_level: 0.04
+    kappa: 2.0
+    weighted_mse: false
+    predict_type: xstart
+    timestep_respacing: null
+    scale_factor: 1.0
+    normalize_input: true
+    latent_flag: true
+autoencoder:
+  target: ldm.models.autoencoder.VQModelTorch
+  ckpt_path: weights/autoencoder_vq_f4.pth
+  use_fp16: true
+  tune_decoder: false
+  params:
+    lora_tune_decoder: false
+    embed_dim: 3
+    n_embed: 8192
+    ddconfig:
+      double_z: false
+      z_channels: 3
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult:
+      - 1
+      - 2
+      - 4
+      num_res_blocks: 2
+      attn_resolutions: []
+      dropout: 0.0
+      padding_mode: zeros
+degradation:
+  sf: 4
+  resize_prob:
+  - 0.2
+  - 0.7
+  - 0.1
+  resize_range:
+  - 0.15
+  - 1.5
+  gaussian_noise_prob: 0.5
+  noise_range:
+  - 1
+  - 30
+  poisson_scale_range:
+  - 0.05
+  - 3.0
+  gray_noise_prob: 0.4
+  jpeg_range:
+  - 30
+  - 95
+  second_order_prob: 0.5
+  second_blur_prob: 0.8
+  resize_prob2:
+  - 0.3
+  - 0.4
+  - 0.3
+  resize_range2:
+  - 0.3
+  - 1.2
+  gaussian_noise_prob2: 0.5
+  noise_range2:
+  - 1
+  - 25
+  poisson_scale_range2:
+  - 0.05
+  - 2.5
+  gray_noise_prob2: 0.4
+  jpeg_range2:
+  - 30
+  - 95
+  gt_size: 256
+  resize_back: false
+  use_sharp: false
+data:
+  train:
+    type: PairedImageDataset
+    params:
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        io_backend:
+          type: disk
+        gt_size: 256
+        use_hflip: true
+        use_rot: true
+        scale: 4
+        phase: train
+  val:
+    type: PairedImageDataset
+    params:
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        io_backend:
+          type: disk
+        scale: 4
+        phase: val
+train:
+  lr: 5.0e-05
+  lr_min: 2.0e-05
+  lr_schedule: null
+  warmup_iterations: 5000
+  batch:
+  - 8
+  - 1
+  microbatch: 8
+  num_workers: 4
+  prefetch_factor: 2
+  weight_decay: 0
+  ema_rate: 0.999
+  iterations: 300000
+  save_freq: 10000
+  log_freq:
+  - 200
+  - 2000
+  - 1
+  local_logging: true
+  tf_logging: false
+  use_ema_val: true
+  val_freq: 100
+  val_y_channel: true
+  val_resolution: ${model.params.lq_size}
+  val_padding_mode: reflect
+  use_amp: true
+  seed: 123456
+  global_seeding: false
+  compile:
+    flag: false
+    mode: reduce-overhead
+  scale: 4
+logger:
+  wandb:
+    project: experiment5
+    name: ronbunnomama
+    id: null
+save_dir: results
+resume: ''
+cfg_path: configs/realsr_swinunet_realesrgan256.yaml
+/usr/local/lib/python3.8/dist-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/usr/local/lib/python3.8/dist-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3526.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+
+Number of parameters: 118.59M
+Restoring autoencoder from weights/autoencoder_vq_f4.pth
+building MemoryEfficientAttnBlock with 512 in_channels...
+Working with z of shape (1, 3, 64, 64) = 12288 dimensions.
+building MemoryEfficientAttnBlock with 512 in_channels...
+Loading autoencoder from weights/autoencoder_vq_f4.pth...
+Loaded Done
+Loading LIIPS Metric: vgg...
+Setting up [LPIPS] perceptual loss: trunk [vgg], v[0.1], spatial [off]
+/usr/local/lib/python3.8/dist-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=VGG16_Weights.IMAGENET1K_V1`. You can also use `weights=VGG16_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+Loading model from: /usr/local/lib/python3.8/dist-packages/lpips/weights/v0.1/vgg.pth
+Loading dataset: 100%|██████████████████████████████| 60/60 [00:26<00:00,  2.31file/s]
+Loading dataset: 100%|██████████████████████████████| 60/60 [00:24<00:00,  2.41file/s]
+Number of images in train data set: 60
+Number of images in val data set: 60
+Traceback (most recent call last):
+  File "main.py", line 71, in <module>
+    trainer.train()
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 321, in train
+    self.validation()
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 983, in validation
+    division_size = self.opt['division']['division_size']
+AttributeError: 'TrainerDifIR' object has no attribute 'opt'
+Traceback (most recent call last):
+  File "main.py", line 71, in <module>
+    trainer.train()
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 321, in train
+    self.validation()
+  File "/workspace/lung/hiratsuka/ResShift/trainer.py", line 983, in validation
+    division_size = self.opt['division']['division_size']
+AttributeError: 'TrainerDifIR' object has no attribute 'opt'

@@ -1,0 +1,54 @@
+/usr/local/lib/python3.8/dist-packages/albumentations/__init__.py:13: UserWarning: A new version of Albumentations is available: 2.0.8 (you have 1.4.18). Upgrade using: pip install -U albumentations. To disable automatic update checks, set the environment variable NO_ALBUMENTATIONS_UPDATE to 1.
+  check_for_updates()
+Traceback (most recent call last):
+  File "main.py", line 70, in <module>
+    trainer = get_obj_from_str(configs.trainer.target)(configs)
+  File "/take/hiratsuka/ResShift/utils/util_common.py", line 24, in get_obj_from_str
+    return getattr(importlib.import_module(module, package=None), cls)
+  File "/usr/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 848, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/take/hiratsuka/ResShift/trainer.py", line 16, in <module>
+    from datapipe.datasets import create_dataset
+  File "/take/hiratsuka/ResShift/datapipe/datasets.py", line 13, in <module>
+    from utils import util_image
+  File "/take/hiratsuka/ResShift/utils/util_image.py", line 17, in <module>
+    from basicsr.metrics.metric_util import reorder_image, to_y_channel
+  File "/take/hiratsuka/ResShift/basicsr/metrics/__init__.py", line 4, in <module>
+    from .niqe import calculate_niqe
+  File "/take/hiratsuka/ResShift/basicsr/metrics/niqe.py", line 8, in <module>
+    from basicsr.metrics.metric_util import reorder_image, to_y_channel
+  File "/take/hiratsuka/ResShift/basicsr/metrics/metric_util.py", line 3, in <module>
+    from basicsr.utils.matlab_functions import bgr2ycbcr
+ImportError: cannot import name 'bgr2ycbcr' from 'basicsr.utils.matlab_functions' (/take/hiratsuka/ResShift/basicsr/utils/matlab_functions.py)
+Traceback (most recent call last):
+  File "main.py", line 70, in <module>
+    trainer = get_obj_from_str(configs.trainer.target)(configs)
+  File "/take/hiratsuka/ResShift/utils/util_common.py", line 24, in get_obj_from_str
+    return getattr(importlib.import_module(module, package=None), cls)
+  File "/usr/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 848, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/take/hiratsuka/ResShift/trainer.py", line 16, in <module>
+    from datapipe.datasets import create_dataset
+  File "/take/hiratsuka/ResShift/datapipe/datasets.py", line 13, in <module>
+    from utils import util_image
+  File "/take/hiratsuka/ResShift/utils/util_image.py", line 17, in <module>
+    from basicsr.metrics.metric_util import reorder_image, to_y_channel
+  File "/take/hiratsuka/ResShift/basicsr/metrics/__init__.py", line 4, in <module>
+    from .niqe import calculate_niqe
+  File "/take/hiratsuka/ResShift/basicsr/metrics/niqe.py", line 8, in <module>
+    from basicsr.metrics.metric_util import reorder_image, to_y_channel
+  File "/take/hiratsuka/ResShift/basicsr/metrics/metric_util.py", line 3, in <module>
+    from basicsr.utils.matlab_functions import bgr2ycbcr
+ImportError: cannot import name 'bgr2ycbcr' from 'basicsr.utils.matlab_functions' (/take/hiratsuka/ResShift/basicsr/utils/matlab_functions.py)
