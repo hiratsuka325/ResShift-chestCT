@@ -6,9 +6,11 @@ model:
   ckpt_path: ~
   params:
     image_size: 64
-    in_channels: 3
+    #in_channels: 3
+    in_channels: 1
     model_channels: 160
-    out_channels: 3
+    #out_channels: 3
+    out_channels: 1
     attention_resolutions: [64,32,16,8]
     dropout: 0
     channel_mult: [1, 2, 2, 4]
@@ -44,30 +46,43 @@ diffusion:
     normalize_input: True
     latent_flag: True
 
+# autoencoder:
+#   target: ldm.models.autoencoder.VQModelTorch
+#   ckpt_path: weights/autoencoder_vq_f4.pth
+#   use_fp16: True
+#   tune_decoder: false
+#   params:
+#     lora_tune_decoder: false
+#     embed_dim: 3
+#     n_embed: 8192
+#     ddconfig:
+#       double_z: False
+#       z_channels: 3
+#       resolution: 256
+#       in_channels: 3
+#       out_ch: 3
+#       ch: 128
+#       ch_mult:
+#       - 1
+#       - 2
+#       - 4
+#       num_res_blocks: 2
+#       attn_resolutions: []
+#       dropout: 0.0
+#       padding_mode: zeros
 autoencoder:
-  target: ldm.models.autoencoder.VQModelTorch
-  ckpt_path: weights/autoencoder_vq_f4.pth
-  use_fp16: True
+  target: monai.networks.nets.AutoencoderKL
+  ckpt_path: weights/autoencoder_end.pth
   tune_decoder: false
   params:
-    lora_tune_decoder: false
-    embed_dim: 3
-    n_embed: 8192
-    ddconfig:
-      double_z: False
-      z_channels: 3
-      resolution: 256
-      in_channels: 3
-      out_ch: 3
-      ch: 128
-      ch_mult:
-      - 1
-      - 2
-      - 4
-      num_res_blocks: 2
-      attn_resolutions: []
-      dropout: 0.0
-      padding_mode: zeros
+    spatial_dims: 2
+    in_channels: 1
+    out_channels: 1
+    channels: [128, 256, 512, 512]
+    latent_channels: 6
+    num_res_blocks: 2
+    norm_num_groups: 32
+    attention_levels: [False, False, False, False]
 
 degradation:
   sf: 4
@@ -103,8 +118,8 @@ data:
         dataroot_gt: ../ChestCT/HR
         dataroot_lq: ../ChestCT/LR
         dataroot_mask: ../ChestCT/mask
-        meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
-        #meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        #meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
         io_backend:
           type: disk
 
@@ -150,8 +165,8 @@ train:
   tf_logging: False             # tensorboard logging
   # validation settings
   use_ema_val: True            
-  val_freq: ${train.save_freq}
-  #val_freq: 200
+  #val_freq: ${train.save_freq}
+  val_freq: 200
   val_y_channel: True
   val_resolution: ${model.params.lq_size}
   val_padding_mode: reflect
@@ -174,5 +189,5 @@ division:
 logger:
   wandb:
     project: experiment5
-    name: ronbunnomama
+    name: ronbuntochigau
     id: 

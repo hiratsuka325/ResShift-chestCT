@@ -69,7 +69,7 @@ def get_parser(**parser_kwargs):
             "--task",
             type=str,
             default="realsr",
-            choices=['realsr', 'bicsr', 'inpaint_imagenet', 'inpaint_face', 'faceir', 'deblur'],
+            choices=['realsr', 'bicsr', 'inpaint_imagenet', 'inpaint_face', 'faceir', 'deblur', 'chestct'],
             help="Chopping forward.",
             )
     args = parser.parse_args()
@@ -127,6 +127,11 @@ def get_configs(args):
         ckpt_url = _LINK[args.task]
         ckpt_path = ckpt_dir / f'resshift_{args.task}_s{_STEP[args.task]}.pth'
         vqgan_url = _LINK['vqgan']
+        vqgan_path = ckpt_dir / f'autoencoder_vq_f4.pth'
+    elif args.task == 'chestct':
+        configs = OmegaConf.load('./configs/realsr_swinunet_realesrgan256.yaml')
+        assert args.scale == 4, 'We only support the 4x super-resolution now!'
+        ckpt_path = f'experiments/2025-10-19-16-14/ema_ckpts/ema_model_270000.pth'
         vqgan_path = ckpt_dir / f'autoencoder_vq_f4.pth'
     else:
         raise TypeError(f"Unexpected task type: {args.task}!")

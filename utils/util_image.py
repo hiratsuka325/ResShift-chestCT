@@ -789,12 +789,15 @@ def write_mhd(im_in, path, spacing=(1.0, 1.0, 1.0), origin=(0.0, 0.0, 0.0)):
 
     im = im_in.copy()
 
-    # If image is RGB, convert shape (H, W, 3) → vector image
+    # If image is RGB, convert to Y channel (luminance)
     if im.ndim == 3 and im.shape[2] == 3:
-        im_sitk = sitk.GetImageFromArray(im, isVector=True)
+        # RGB to Y conversion using standard ITU-R BT.601 formula
+        # Y = 0.299 R + 0.587 G + 0.114 B
+        im_y = 0.299 * im[:, :, 0] + 0.587 * im[:, :, 1] + 0.114 * im[:, :, 2]
+        im_sitk = sitk.GetImageFromArray(im_y)
     else:
         im_sitk = sitk.GetImageFromArray(im)
-
+        
     im_sitk.SetSpacing(spacing)
     im_sitk.SetOrigin(origin)
 

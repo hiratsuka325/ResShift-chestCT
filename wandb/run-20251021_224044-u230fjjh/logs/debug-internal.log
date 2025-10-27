@@ -1,0 +1,15 @@
+{"time":"2025-10-21T22:40:44.78689921+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/workspace/lung/hiratsuka/ResShift/wandb/run-20251021_224044-u230fjjh/logs/debug-core.log"}
+{"time":"2025-10-21T22:40:45.213884681+09:00","level":"INFO","msg":"created new stream","id":"u230fjjh"}
+{"time":"2025-10-21T22:40:45.21394203+09:00","level":"INFO","msg":"stream: started","id":"u230fjjh"}
+{"time":"2025-10-21T22:40:45.213968861+09:00","level":"INFO","msg":"sender: started","stream_id":"u230fjjh"}
+{"time":"2025-10-21T22:40:45.21396315+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"u230fjjh"}
+{"time":"2025-10-21T22:40:45.214118345+09:00","level":"INFO","msg":"handler: started","stream_id":"u230fjjh"}
+{"time":"2025-10-21T22:40:45.500332057+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-10-21T22:40:49.238746711+09:00","level":"INFO","msg":"stream: closing","id":"u230fjjh"}
+{"time":"2025-10-21T22:40:49.238800082+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-10-21T22:40:49.238854666+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-10-21T22:40:49.940876795+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-10-21T22:40:50.183105597+09:00","level":"INFO","msg":"handler: closed","stream_id":"u230fjjh"}
+{"time":"2025-10-21T22:40:50.183119353+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"u230fjjh"}
+{"time":"2025-10-21T22:40:50.183134682+09:00","level":"INFO","msg":"sender: closed","stream_id":"u230fjjh"}
+{"time":"2025-10-21T22:40:50.185479333+09:00","level":"INFO","msg":"stream: closed","id":"u230fjjh"}

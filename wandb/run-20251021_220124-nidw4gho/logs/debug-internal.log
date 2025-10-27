@@ -1,0 +1,15 @@
+{"time":"2025-10-21T22:01:24.764402797+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/workspace/lung/hiratsuka/ResShift/wandb/run-20251021_220124-nidw4gho/logs/debug-core.log"}
+{"time":"2025-10-21T22:01:25.179733123+09:00","level":"INFO","msg":"created new stream","id":"nidw4gho"}
+{"time":"2025-10-21T22:01:25.1797788+09:00","level":"INFO","msg":"stream: started","id":"nidw4gho"}
+{"time":"2025-10-21T22:01:25.179816812+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"nidw4gho"}
+{"time":"2025-10-21T22:01:25.179847831+09:00","level":"INFO","msg":"handler: started","stream_id":"nidw4gho"}
+{"time":"2025-10-21T22:01:25.179912373+09:00","level":"INFO","msg":"sender: started","stream_id":"nidw4gho"}
+{"time":"2025-10-21T22:01:25.528918712+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-10-21T22:01:38.624237587+09:00","level":"INFO","msg":"stream: closing","id":"nidw4gho"}
+{"time":"2025-10-21T22:01:38.62427585+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-10-21T22:01:38.624329211+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-10-21T22:01:39.340248179+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-10-21T22:01:39.575166883+09:00","level":"INFO","msg":"handler: closed","stream_id":"nidw4gho"}
+{"time":"2025-10-21T22:01:39.575194245+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"nidw4gho"}
+{"time":"2025-10-21T22:01:39.575212209+09:00","level":"INFO","msg":"sender: closed","stream_id":"nidw4gho"}
+{"time":"2025-10-21T22:01:39.577561764+09:00","level":"INFO","msg":"stream: closed","id":"nidw4gho"}
