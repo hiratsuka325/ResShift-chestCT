@@ -1,0 +1,279 @@
+/usr/local/lib/python3.8/dist-packages/albumentations/check_version.py:49: UserWarning: Error fetching version info <urlopen error [Errno -2] Name or service not known>
+  data = fetch_version_info()
+trainer:
+  target: trainer.TrainerDifIR
+model:
+  target: models.unet.UNetModelSwin
+  ckpt_path: null
+  params:
+    image_size: 64
+    in_channels: 1
+    model_channels: 160
+    out_channels: 1
+    attention_resolutions:
+    - 64
+    - 32
+    - 16
+    - 8
+    dropout: 0
+    channel_mult:
+    - 1
+    - 2
+    - 2
+    - 4
+    num_res_blocks:
+    - 2
+    - 2
+    - 2
+    - 2
+    conv_resample: true
+    dims: 2
+    use_fp16: false
+    num_head_channels: 32
+    use_scale_shift_norm: true
+    resblock_updown: false
+    swin_depth: 2
+    swin_embed_dim: 192
+    window_size: 8
+    mlp_ratio: 4
+    cond_lq: true
+    lq_size: 64
+diffusion:
+  target: models.script_util.create_gaussian_diffusion
+  params:
+    sf: 4
+    schedule_name: exponential
+    schedule_kwargs:
+      power: 0.3
+    etas_end: 0.99
+    steps: 15
+    min_noise_level: 0.04
+    kappa: 2.0
+    weighted_mse: false
+    predict_type: xstart
+    timestep_respacing: null
+    scale_factor: 1.0
+    normalize_input: true
+    latent_flag: true
+autoencoder:
+  target: monai.networks.nets.AutoencoderKL
+  ckpt_path: weights/autoencoder_end.pth
+  tune_decoder: false
+  params:
+    spatial_dims: 2
+    in_channels: 1
+    out_channels: 1
+    channels:
+    - 128
+    - 256
+    - 512
+    - 512
+    latent_channels: 6
+    num_res_blocks: 2
+    norm_num_groups: 32
+    attention_levels:
+    - false
+    - false
+    - false
+    - false
+degradation:
+  sf: 4
+  resize_prob:
+  - 0.2
+  - 0.7
+  - 0.1
+  resize_range:
+  - 0.15
+  - 1.5
+  gaussian_noise_prob: 0.5
+  noise_range:
+  - 1
+  - 30
+  poisson_scale_range:
+  - 0.05
+  - 3.0
+  gray_noise_prob: 0.4
+  jpeg_range:
+  - 30
+  - 95
+  second_order_prob: 0.5
+  second_blur_prob: 0.8
+  resize_prob2:
+  - 0.3
+  - 0.4
+  - 0.3
+  resize_range2:
+  - 0.3
+  - 1.2
+  gaussian_noise_prob2: 0.5
+  noise_range2:
+  - 1
+  - 25
+  poisson_scale_range2:
+  - 0.05
+  - 2.5
+  gray_noise_prob2: 0.4
+  jpeg_range2:
+  - 30
+  - 95
+  gt_size: 256
+  resize_back: false
+  use_sharp: false
+data:
+  train:
+    type: PairedImageDataset
+    params:
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        io_backend:
+          type: disk
+        gt_size: 256
+        use_hflip: true
+        use_rot: true
+        scale: 4
+        phase: train
+  val:
+    type: PairedImageDataset
+    params:
+      opt:
+        dataroot_gt: ../ChestCT/HR
+        dataroot_lq: ../ChestCT/LR
+        dataroot_mask: ../ChestCT/mask
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        io_backend:
+          type: disk
+        scale: 4
+        phase: val
+train:
+  lr: 5.0e-05
+  lr_min: 2.0e-05
+  lr_schedule: null
+  warmup_iterations: 5000
+  batch:
+  - 8
+  - 1
+  microbatch: 8
+  num_workers: 4
+  prefetch_factor: 2
+  weight_decay: 0
+  ema_rate: 0.999
+  iterations: 300000
+  save_freq: 10000
+  log_freq:
+  - 200
+  - 2000
+  - 1
+  local_logging: true
+  tf_logging: false
+  use_ema_val: true
+  val_freq: 200
+  val_y_channel: true
+  val_resolution: ${model.params.lq_size}
+  val_padding_mode: reflect
+  use_amp: true
+  seed: 123456
+  global_seeding: false
+  compile:
+    flag: false
+    mode: reduce-overhead
+  scale: 4
+division:
+  division_size: 64
+  overlap_size: 4
+logger:
+  wandb:
+    project: experiment5
+    name: ronbuntochigau
+    id: null
+save_dir: results
+resume: ''
+cfg_path: configs/realsr_swinunet_realesrgan256.yaml
+/usr/local/lib/python3.8/dist-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/usr/local/lib/python3.8/dist-packages/torch/functional.py:504: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3526.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+
+Number of parameters: 118.59M
+Restoring autoencoder from weights/autoencoder_end.pth
+/workspace/lung/hiratsuka/ResSHift/monai/__init__.py:76: RuntimeWarning: MONAI requires Python 3.9 or higher. But the current Python is: 3.8.10 (default, Mar 18 2025, 20:04:55)
+[GCC 9.4.0]
+  warnings.warn(
+Traceback (most recent call last):
+  File "main.py", line 71, in <module>
+    trainer.train()
+  File "/workspace/lung/hiratsuka/ResSHift/trainer.py", line 301, in train
+    self.build_model()       # build model: self.model, self.loss
+  File "/workspace/lung/hiratsuka/ResSHift/trainer.py", line 460, in build_model
+    autoencoder = util_common.get_obj_from_str(self.configs.autoencoder.target)(**params)
+  File "/workspace/lung/hiratsuka/ResSHift/utils/util_common.py", line 24, in get_obj_from_str
+    return getattr(importlib.import_module(module, package=None), cls)
+  File "/usr/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 961, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 961, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "/usr/local/lib/python3.8/dist-packages/wandb/sdk/lib/import_hooks.py", line 182, in _exec_module
+    self.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 848, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/workspace/lung/hiratsuka/ResSHift/monai/__init__.py", line 83, in <module>
+    from .utils.module import load_submodules  # noqa: E402
+  File "/workspace/lung/hiratsuka/ResSHift/monai/utils/__init__.py", line 70, in <module>
+    from .misc import (
+  File "/workspace/lung/hiratsuka/ResSHift/monai/utils/misc.py", line 34, in <module>
+    from monai.config.type_definitions import NdarrayOrTensor, NdarrayTensor, PathLike
+  File "/workspace/lung/hiratsuka/ResSHift/monai/config/__init__.py", line 27, in <module>
+    from .type_definitions import (
+  File "/workspace/lung/hiratsuka/ResSHift/monai/config/type_definitions.py", line 56, in <module>
+    KeysCollection = Union[Collection[Hashable], Hashable]
+TypeError: 'ABCMeta' object is not subscriptable
+Traceback (most recent call last):
+  File "main.py", line 71, in <module>
+    trainer.train()
+  File "/workspace/lung/hiratsuka/ResSHift/trainer.py", line 301, in train
+    self.build_model()       # build model: self.model, self.loss
+  File "/workspace/lung/hiratsuka/ResSHift/trainer.py", line 460, in build_model
+    autoencoder = util_common.get_obj_from_str(self.configs.autoencoder.target)(**params)
+  File "/workspace/lung/hiratsuka/ResSHift/utils/util_common.py", line 24, in get_obj_from_str
+    return getattr(importlib.import_module(module, package=None), cls)
+  File "/usr/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 961, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 961, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "/usr/local/lib/python3.8/dist-packages/wandb/sdk/lib/import_hooks.py", line 182, in _exec_module
+    self.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 848, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/workspace/lung/hiratsuka/ResSHift/monai/__init__.py", line 83, in <module>
+    from .utils.module import load_submodules  # noqa: E402
+  File "/workspace/lung/hiratsuka/ResSHift/monai/utils/__init__.py", line 70, in <module>
+    from .misc import (
+  File "/workspace/lung/hiratsuka/ResSHift/monai/utils/misc.py", line 34, in <module>
+    from monai.config.type_definitions import NdarrayOrTensor, NdarrayTensor, PathLike
+  File "/workspace/lung/hiratsuka/ResSHift/monai/config/__init__.py", line 27, in <module>
+    from .type_definitions import (
+  File "/workspace/lung/hiratsuka/ResSHift/monai/config/type_definitions.py", line 56, in <module>
+    KeysCollection = Union[Collection[Hashable], Hashable]
+TypeError: 'ABCMeta' object is not subscriptable
