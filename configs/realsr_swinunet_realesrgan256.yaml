@@ -70,7 +70,7 @@ autoencoder:
       attn_resolutions: []
       dropout: 0.0
       padding_mode: zeros
-# autoencoder:
+# autoencoder:こっちのエンコーダーは使えないもともとのエンコーダーとparamsの書き方が異なるため，具体的には，lora_tune_decoderやddconfigがないことによるエラーが起きる
 #   target: monai.networks.nets.AutoencoderKL
 #   ckpt_path: weights/autoencoder_end.pth
 #   tune_decoder: false
@@ -118,8 +118,8 @@ data:
         dataroot_gt: ../ChestCT/HR
         dataroot_lq: ../ChestCT/LR
         dataroot_mask: ../ChestCT/mask
-        #meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
-        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
+        #meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
         io_backend:
           type: disk
 
@@ -165,8 +165,8 @@ train:
   tf_logging: False             # tensorboard logging
   # validation settings
   use_ema_val: True            
-  #val_freq: ${train.save_freq}
-  val_freq: 200
+  val_freq: ${train.save_freq}
+  #val_freq: 200
   val_y_channel: True
   val_resolution: ${model.params.lq_size}
   val_padding_mode: reflect
@@ -189,5 +189,5 @@ division:
 logger:
   wandb:
     project: experiment5
-    name: ronbuntochigau
+    name: ResShift
     id: 

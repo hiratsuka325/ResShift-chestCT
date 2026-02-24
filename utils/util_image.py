@@ -793,7 +793,8 @@ def write_mhd(im_in, path, spacing=(1.0, 1.0, 1.0), origin=(0.0, 0.0, 0.0)):
     if im.ndim == 3 and im.shape[2] == 3:
         # RGB to Y conversion using standard ITU-R BT.601 formula
         # Y = 0.299 R + 0.587 G + 0.114 B
-        im_y = 0.299 * im[:, :, 0] + 0.587 * im[:, :, 1] + 0.114 * im[:, :, 2]
+        # im_y = 0.299 * im[:, :, 0] + 0.587 * im[:, :, 1] + 0.114 * im[:, :, 2] #RGB
+        im_y = 0.299 * im[:, :, 2] + 0.587 * im[:, :, 1] + 0.114 * im[:, :, 0] #BGR
         im_sitk = sitk.GetImageFromArray(im_y)
     else:
         im_sitk = sitk.GetImageFromArray(im)

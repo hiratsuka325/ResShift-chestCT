@@ -234,7 +234,8 @@ def bgr2ycbcr(img, y_only=False):
     img_type = img.dtype
     img = _convert_input_type_range(img)
     if y_only:
-        out_img = np.dot(img, [24.966, 128.553, 65.481]) + 16.0
+        #out_img = np.dot(img, [24.966, 128.553, 65.481]) + 16.0
+        out_img = np.dot(img, [29.070, 149.685, 76.245])
     else:
         out_img = np.matmul(
             img, [[24.966, 112.0, -18.214], [128.553, -74.203, -93.786], [65.481, -37.797, 112.0]]) + [16, 128, 128]

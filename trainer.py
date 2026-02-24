@@ -1062,7 +1062,7 @@ class TrainerDifIR(TrainerBase):
                         output * 0.5 + 0.5,
                         im_gt * 0.5 + 0.5,
                         data['lung_mask'],
-                        crop_border=4,
+                        crop_border=0,
                         test_y_channel=self.configs.train.val_y_channel,
                     )
                     sum_psnr += psnr
