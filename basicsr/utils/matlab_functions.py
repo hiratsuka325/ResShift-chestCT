@@ -202,7 +202,8 @@ def rgb2ycbcr(img, y_only=False):
     img_type = img.dtype
     img = _convert_input_type_range(img)
     if y_only:
-        out_img = np.dot(img, [65.481, 128.553, 24.966]) + 16.0
+        #out_img = np.dot(img, [65.481, 128.553, 24.966]) + 16.0
+        out_img = np.dot(img, [76.245, 149.685, 29.070])
     else:
         out_img = np.matmul(
             img, [[65.481, -37.797, 112.0], [128.553, -74.203, -93.786], [24.966, 112.0, -18.214]]) + [16, 128, 128]
