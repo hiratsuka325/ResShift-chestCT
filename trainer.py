@@ -36,6 +36,7 @@ import torchvision.utils as vutils
 from torch.nn.parallel import DistributedDataParallel as DDP
 import wandb
 
+from models.CTree import loss_maxima
 
 class TrainerBase:
     def __init__(self, configs):
@@ -507,6 +508,22 @@ class TrainerDifIR(TrainerBase):
 
         params = self.configs.diffusion.get('params', dict)
         self.base_diffusion = util_common.get_obj_from_str(self.configs.diffusion.target)(**params)
+        
+        # -------------------------
+        # Component Tree loss 用の初期化
+        # -------------------------
+        if getattr(self.configs.loss, "use_CTree", False):
+            import higra as hg
+
+            H = self.configs.degradation.gt_size
+            W = self.configs.degradation.gt_size
+
+            # higra graph
+            self.ctree_graph = hg.get_8_adjacency_implicit_graph((H, W))
+
+            # saliency / importance
+            self.ctree_sm = self.configs.loss.sm
+            self.ctree_im = self.configs.loss.im
 
     @torch.no_grad()
     def _dequeue_and_enqueue(self):
@@ -731,7 +748,24 @@ class TrainerDifIR(TrainerBase):
         context = torch.cuda.amp.autocast if self.configs.train.use_amp else nullcontext
         with context():
             losses, z_t, z0_pred = dif_loss_wrapper()
-            losses['loss'] = losses['mse']
+            
+            total_loss = self.configs.loss.weight_mse * losses['mse']
+            
+            if getattr(self.configs.loss, 'use_CTree', False):
+                # 潜在空間 -> 画像空間に変換
+                x0_pred_img = self.base_diffusion.decode_first_stage(
+                    z0_pred,
+                    self.autoencoder,
+                )
+                # (B, C, H, W) -> (H, W) バッチ内の一枚の画像に対してのみCTreeLossを計算
+                x0_pred_single = x0_pred_img[0].mean(0).cpu()
+                # 画像空間でCTree損失を計算
+                CTree_loss = loss_maxima(self.ctree_graph, x0_pred_single, self.ctree_sm, self.ctree_im, num_target_maxima=100,  p=1, q=1)
+                losses['CTree'] = CTree_loss.to(x0_pred_img.device)
+                total_loss += self.configs.loss.weight_CTree * CTree_loss
+                
+            #losses['loss'] = losses['mse']
+            losses['loss'] = total_loss    
             loss = losses['loss'].mean() / num_grad_accumulate
         if self.amp_scaler is None:
             loss.backward()
@@ -856,6 +890,8 @@ class TrainerDifIR(TrainerBase):
                 for jj, current_record in enumerate(record_steps):
                     wandb_log_dict[f'Loss/t{current_record}'] = self.loss_mean['loss'][jj].item()
                     wandb_log_dict[f'MSE/t{current_record}'] = self.loss_mean['mse'][jj].item()
+                    if 'CTree' in self.loss_mean:
+                        wandb_log_dict[f'CTree/t{current_record}'] = self.loss_mean['CTree'][jj].item()
                 wandb_log_dict['lr'] = self.optimizer.param_groups[0]['lr']
                 wandb_log_dict['step'] = self.current_iters
                 wandb.log(wandb_log_dict)

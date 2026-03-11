@@ -191,3 +191,10 @@ logger:
     project: experiment5
     name: ResShift
     id: 
+
+loss:
+  use_CTree: true        # mCTree損失を使うかどうか
+  weight_mse: 1.0         # 既存の MSE の重み
+  weight_CTree: 0.3      # mCTree損失の重み
+  sm : "dynamics"
+  im : "dynamics"
