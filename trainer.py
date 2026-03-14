@@ -757,10 +757,26 @@ class TrainerDifIR(TrainerBase):
                     z0_pred,
                     self.autoencoder,
                 )
-                # (B, C, H, W) -> (H, W) バッチ内の一枚の画像に対してのみCTreeLossを計算
-                x0_pred_single = x0_pred_img[0].mean(0).cpu()
-                # 画像空間でCTree損失を計算
-                CTree_loss = loss_maxima(self.ctree_graph, x0_pred_single, self.ctree_sm, self.ctree_im, num_target_maxima=100,  p=1, q=1)
+                
+                batch_losses = []
+                
+                for img in x0_pred_img:
+                    
+                    img2d = img.mean(0).cpu()
+                    
+                    batch_losses.append(
+                        loss_maxima(
+                            self.ctree_graph,
+                            img2d,
+                            self.ctree_sm,
+                            self.ctree_im,
+                            num_target_maxima=0,
+                            p=1,
+                            q=1
+                        )
+                    )
+                CTree_loss = torch.stack(batch_losses).mean()
+                
                 losses['CTree'] = CTree_loss.to(x0_pred_img.device)
                 total_loss += self.configs.loss.weight_CTree * CTree_loss
                 
