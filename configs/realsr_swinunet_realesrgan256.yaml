@@ -200,7 +200,7 @@ loss:
   use_CTree: False        # CTree損失を使うかどうか
   weight_CTree: 0.0001      # CTree損失の重み
   use_multiCTree: True        # multiCTree損失を使うかどうか
-  weight_multiCTree: 0.001
+  weight_multiCTree: 0.001      # multiCTree損失の重み
   sm : "dynamics"
   # im : "dynamics"
   im : "precision"

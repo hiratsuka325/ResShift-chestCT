@@ -939,6 +939,8 @@ class TrainerDifIR(TrainerBase):
                     wandb_log_dict[f'MSE/t{current_record}'] = self.loss_mean['mse'][jj].item()
                     if 'CTree' in self.loss_mean:
                         wandb_log_dict[f'CTree/t{current_record}'] = self.loss_mean['CTree'][jj].item()
+                    if 'mCTree' in self.loss_mean:
+                        wandb_log_dict[f'multiCTree/t{current_record}'] = self.loss_mean['mCTree'][jj].item()
                 wandb_log_dict['lr'] = self.optimizer.param_groups[0]['lr']
                 wandb_log_dict['step'] = self.current_iters
                 wandb.log(wandb_log_dict)
