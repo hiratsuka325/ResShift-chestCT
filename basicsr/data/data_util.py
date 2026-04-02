@@ -339,12 +339,12 @@ def paired_metas_from_meta_info_file(folders, keys, meta_info_file, filename_tmp
     Returns:
         list[str]: Returned path list.
     """
-    assert len(folders) == 3, ('The len of folders should be 3 with [input_folder, gt_folder, mask_folder]. '
+    assert len(folders) == 4, ('The len of folders should be 3 with [input_folder, gt_folder, mask_folder, label_folder]. '
                                f'But got {len(folders)}')
-    assert len(keys) == 3, f'The len of keys should be 3 with [input_key, gt_key, mask_key]. But got {len(keys)}'
+    assert len(keys) == 4, f'The len of keys should be 3 with [input_key, gt_key, mask_key, label_folder]. But got {len(keys)}'
     
-    input_folder, gt_folder , mask_folder = folders
-    input_key, gt_key , mask_key = keys
+    input_folder, gt_folder, mask_folder, label_folder = folders
+    input_key, gt_key, mask_key, label_key = keys
 
     lq_hq_metas = []
 
@@ -370,15 +370,18 @@ def paired_metas_from_meta_info_file(folders, keys, meta_info_file, filename_tmp
             input_path = osp.join(input_folder, osp.dirname(path_part_mhd), input_name)  # Adjust this line
             gt_path = osp.join(gt_folder, path_part_mhd)
             mask_path = osp.join(mask_folder, path_part_png)
+            label_path = osp.join(label_folder, path_part_png)
 
             # Append to result list
             lq_hq_metas.append({
                 f'{input_key}_path': input_path,
                 f'{gt_key}_path': gt_path,
                 f'{mask_key}_path': mask_path,
+                f'{label_key}_path': label_path,
                 f'{input_key}_size': input_size,
                 f'{gt_key}_size': (height, width, channels),
-                f'{mask_key}_size': (height, width, channels)
+                f'{mask_key}_size': (height, width, channels),
+                f'{label_key}_size': (height, width, channels)
             })
 
     return lq_hq_metas

@@ -40,7 +40,8 @@ diffusion:
     min_noise_level: 0.04
     kappa: 2.0
     weighted_mse: False
-    predict_type: xstart
+    # predict_type: xstart
+    predict_type: epsilon
     timestep_respacing: ~
     scale_factor: 1.0
     normalize_input: True
@@ -118,8 +119,9 @@ data:
         dataroot_gt: ../ChestCT/HR
         dataroot_lq: ../ChestCT/LR
         dataroot_mask: ../ChestCT/mask
-        meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
-        #meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        dataroot_label: ../ChestCT/label
+        #meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
+        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
         io_backend:
           type: disk
 
@@ -135,6 +137,7 @@ data:
         dataroot_gt: ../ChestCT/HR
         dataroot_lq: ../ChestCT/LR
         dataroot_mask: ../ChestCT/mask
+        dataroot_label: ../ChestCT/label
         meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
         io_backend:
           type: disk
@@ -193,8 +196,11 @@ logger:
     id: 
 
 loss:
-  use_CTree: true        # mCTree損失を使うかどうか
   weight_mse: 1.0         # 既存の MSE の重み
-  weight_CTree: 0.001      # mCTree損失の重み
+  use_CTree: False        # CTree損失を使うかどうか
+  weight_CTree: 0.0001      # CTree損失の重み
+  use_multiCTree: True        # multiCTree損失を使うかどうか
+  weight_multiCTree: 0.001
   sm : "dynamics"
-  im : "dynamics"
+  # im : "dynamics"
+  im : "precision"

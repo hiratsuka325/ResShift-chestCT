@@ -20,7 +20,7 @@ from .degradation_bsrgan.bsrgan_light import degradation_bsrgan_variant, degrada
 from .masks import MixedMaskGenerator
 
 from basicsr.data.data_util import paired_paths_from_folder, paired_paths_from_lmdb, paired_paths_from_meta_info_file, paired_metas_from_meta_info_file
-from basicsr.data.transforms import augment, paired_random_crop, paired_random_crop_mask
+from basicsr.data.transforms import augment, paired_random_crop, paired_random_crop_mask, paired_random_crop_mask_label
 from basicsr.utils import FileClient, imfrombytes, img2tensor, read_mhd_to_numpy
 from basicsr.utils.matlab_functions import rgb2ycbcr
 from basicsr.utils.registry import DATASET_REGISTRY
@@ -195,7 +195,7 @@ class PairedImageDataset(Dataset):
         self.std = opt['std'] if 'std' in opt else None
         self.scale = opt['scale']
 
-        self.gt_folder, self.lq_folder , self.mask_folder = opt['dataroot_gt'], opt['dataroot_lq'], opt['dataroot_mask']
+        self.gt_folder, self.lq_folder , self.mask_folder , self.label_folder = opt['dataroot_gt'], opt['dataroot_lq'], opt['dataroot_mask'], opt['dataroot_label']
         if 'filename_tmpl' in opt:
             self.filename_tmpl = opt['filename_tmpl']
         else:
@@ -208,7 +208,7 @@ class PairedImageDataset(Dataset):
         elif 'meta_info_file' in self.opt and self.opt['meta_info_file'] is not None:
             #self.paths = paired_paths_from_meta_info_file([self.lq_folder, self.gt_folder], ['lq', 'gt'],
             #                                              self.opt['meta_info_file'], self.filename_tmpl)
-            self.paths = paired_metas_from_meta_info_file([self.lq_folder, self.gt_folder, self.mask_folder], ['lq', 'gt', 'mask'],
+            self.paths = paired_metas_from_meta_info_file([self.lq_folder, self.gt_folder, self.mask_folder, self.label_folder], ['lq', 'gt', 'mask', 'label'],
                                                           self.opt['meta_info_file'], self.filename_tmpl, self.scale)
         else:
             self.paths = paired_paths_from_folder([self.lq_folder, self.gt_folder], ['lq', 'gt'], self.filename_tmpl)
@@ -220,6 +220,7 @@ class PairedImageDataset(Dataset):
         self.lq_imgs = []
         self.gt_imgs = []
         self.mask_imgs = []
+        self.label_imgs = []
         if self.file_client is None:
             self.file_client = FileClient(self.io_backend_opt.pop('type'), **self.io_backend_opt)  
                       
@@ -266,6 +267,25 @@ class PairedImageDataset(Dataset):
                 self.mask_imgs.append(mask_img)
             else:
                 print(f"Warning: {mask_path} does not exist.")
+                
+            # 隔壁ラベル
+            label_path = meta['label_path']
+            if os.path.exists(label_path):
+                img_bytes = self.file_client.get(label_path, 'label')
+                label_img = imfrombytes(img_bytes, float32=True)
+
+                # チャンネル次元を追加して(H, W, 1)にする
+                if label_img.ndim == 2:  # (H, W)の場合
+                    label_img = label_img[:, :, np.newaxis]  # (H, W) -> (H, W, 1)
+                elif label_img.ndim == 3 and label_img.shape[2] != 1:  # (H, W, C) で C != 1の場合
+                    label_img = label_img[:, :, :1]  # チャンネル数が多い場合、1チャンネルだけを取る
+                    
+                # 非ゼロ画素を1に変換
+                label_img = np.where(label_img != 0, 1.0, 0.0)
+
+                self.label_imgs.append(label_img)
+            else:
+                print(f"Warning: {label_path} does not exist.")
 
     def __getitem__(self, index):
         if self.file_client is None:
@@ -279,19 +299,23 @@ class PairedImageDataset(Dataset):
         lq_path = self.paths[index]['lq_path']
 
         mask_path = self.paths[index]['mask_path'] 
+        
+        label_path = self.paths[index]['label_path']
 
         # getitemで画像を持ってくるとtakeへ何回もアクセスすることになるのでinitで画像を持ってくることで一回だけにするためにここを追加した
         img_gt = self.gt_imgs[index]
         img_lq = self.lq_imgs[index]
         img_mask = self.mask_imgs[index]
+        img_label = self.label_imgs[index]
         
         # augmentation for training
         if self.opt['phase'] == 'train':
             gt_size = self.opt['gt_size']
             # random crop
-            img_gt, img_lq , img_mask = paired_random_crop_mask(img_gt, img_lq, img_mask, gt_size, scale, gt_path)
+            # img_gt, img_lq , img_mask = paired_random_crop_mask(img_gt, img_lq, img_mask, gt_size, scale, gt_path)
+            img_gt, img_lq , img_mask, img_label = paired_random_crop_mask_label(img_gt, img_lq, img_mask, img_label, gt_size, scale, gt_path)
             # flip, rotation
-            img_gt, img_lq , img_mask = augment([img_gt, img_lq, img_mask], self.opt['use_hflip'], self.opt['use_rot'])
+            img_gt, img_lq , img_mask, img_label = augment([img_gt, img_lq, img_mask, img_label], self.opt['use_hflip'], self.opt['use_rot'])
 
         import numpy as np
         if img_gt.ndim == 2:  # (H, W)の場合
@@ -300,6 +324,8 @@ class PairedImageDataset(Dataset):
             img_lq = img_lq[:, :, np.newaxis]  # (H, W) -> (H, W, 1)
         if img_mask.ndim == 2:  # (H, W)の場合
             img_mask = img_mask[:, :, np.newaxis]  # (H, W) -> (H, W, 1)
+        if img_label.ndim == 2:  # (H, W)の場合
+            img_label = img_label[:, :, np.newaxis]  # (H, W) -> (H, W, 1)
 
         # color space transform
         if 'color' in self.opt and self.opt['color'] == 'y':
@@ -312,7 +338,7 @@ class PairedImageDataset(Dataset):
             img_gt = img_gt[0:img_lq.shape[0] * scale, 0:img_lq.shape[1] * scale, :]
 
         # BGR to RGB, HWC to CHW, numpy to tensor
-        img_gt, img_lq, img_mask = img2tensor([img_gt, img_lq, img_mask], bgr2rgb=False, float32=True)
+        img_gt, img_lq, img_mask, img_label = img2tensor([img_gt, img_lq, img_mask, img_label], bgr2rgb=False, float32=True)
 
         # normalize
         if self.mean is not None or self.std is not None:
@@ -323,7 +349,7 @@ class PairedImageDataset(Dataset):
         img_gt = img_gt * 2 - 1
 
         #return {'lq': img_lq, 'gt': img_gt, 'mask': img_mask, 'lq_path': lq_path, 'gt_path': gt_path, 'mask_path':mask_path}
-        return {'lq': img_lq, 'gt': img_gt, 'lung_mask': img_mask}
+        return {'lq': img_lq, 'gt': img_gt, 'lung_mask': img_mask, 'label': img_label}
 
     def __len__(self):
         return len(self.paths)

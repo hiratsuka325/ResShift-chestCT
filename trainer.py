@@ -37,6 +37,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import wandb
 
 from models.CTree import loss_maxima
+from models.multiCTree import loss_maxima_mCTree
 
 class TrainerBase:
     def __init__(self, configs):
@@ -512,7 +513,8 @@ class TrainerDifIR(TrainerBase):
         # -------------------------
         # Component Tree loss 用の初期化
         # -------------------------
-        if getattr(self.configs.loss, "use_CTree", False):
+        if getattr(self.configs.loss, "use_CTree", False) or \
+           getattr(self.configs.loss, "use_multiCTree", False):
             import higra as hg
 
             H = self.configs.degradation.gt_size
@@ -779,6 +781,35 @@ class TrainerDifIR(TrainerBase):
                 
                 losses['CTree'] = CTree_loss.to(x0_pred_img.device)
                 total_loss += self.configs.loss.weight_CTree * CTree_loss
+                
+            if getattr(self.configs.loss, 'use_multiCTree', False):
+                # 潜在空間 -> 画像空間に変換
+                x0_pred_img = self.base_diffusion.decode_first_stage(
+                    z0_pred,
+                    self.autoencoder,
+                )
+                
+                batch_losses = []
+                
+                labels = micro_data['label']
+                
+                for img, label in zip(x0_pred_img, labels):
+                    
+                    img2d = img.mean(0).cpu()
+                    
+                    batch_losses.append(
+                        loss_maxima_mCTree(
+                            self.ctree_graph,
+                            img2d,
+                            label.squeeze(0).cpu().numpy(),
+                            self.ctree_sm,
+                            self.ctree_im,
+                        )
+                    )
+                mCTree_loss = torch.stack(batch_losses).mean()
+                
+                losses['mCTree'] = mCTree_loss.to(x0_pred_img.device)
+                total_loss += self.configs.loss.weight_multiCTree * mCTree_loss
                 
             #losses['loss'] = losses['mse']
             losses['loss'] = total_loss    
