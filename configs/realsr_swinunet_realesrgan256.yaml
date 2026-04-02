@@ -120,8 +120,8 @@ data:
         dataroot_lq: ../ChestCT/LR
         dataroot_mask: ../ChestCT/mask
         dataroot_label: ../ChestCT/label
-        #meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
-        meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
+        meta_info_file: data/meta_info/meta_info_ChestCT_train_1345681011121416_part.txt
+        # meta_info_file: data/meta_info/meta_info_ChestCT_val_2715_part_60.txt
         io_backend:
           type: disk
 
@@ -200,7 +200,7 @@ loss:
   use_CTree: False        # CTree損失を使うかどうか
   weight_CTree: 0.0001      # CTree損失の重み
   use_multiCTree: True        # multiCTree損失を使うかどうか
-  weight_multiCTree: 0.001      # multiCTree損失の重み
+  weight_multiCTree: 0.01      # multiCTree損失の重み
   sm : "dynamics"
   # im : "dynamics"
   im : "precision"

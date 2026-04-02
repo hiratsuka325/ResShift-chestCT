@@ -788,24 +788,26 @@ class TrainerDifIR(TrainerBase):
                     z0_pred,
                     self.autoencoder,
                 )
-                
-                batch_losses = []
-                
-                labels = micro_data['label']
-                
-                for img, label in zip(x0_pred_img, labels):
-                    
-                    img2d = img.mean(0).cpu()
-                    
-                    batch_losses.append(
-                        loss_maxima_mCTree(
-                            self.ctree_graph,
-                            img2d,
-                            label.squeeze(0).cpu().numpy(),
-                            self.ctree_sm,
-                            self.ctree_im,
-                        )
+
+                imgs2d = x0_pred_img.mean(1).cpu()      # (B, H, W)
+                labels_np = micro_data['label'].squeeze(1).cpu().numpy()     # (B, H, W)
+
+                def compute_loss(args):
+                    img2d, label = args
+
+                    return loss_maxima_mCTree(
+                        self.ctree_graph,
+                        img2d,
+                        label,
+                        self.ctree_sm,
+                        self.ctree_im,
                     )
+
+                # --- 並列処理 ---
+                from concurrent.futures import ThreadPoolExecutor
+                with ThreadPoolExecutor(max_workers=4) as executor:
+                    batch_losses = list(executor.map(compute_loss, zip(imgs2d, labels_np)))
+
                 mCTree_loss = torch.stack(batch_losses).mean()
                 
                 losses['mCTree'] = mCTree_loss.to(x0_pred_img.device)
