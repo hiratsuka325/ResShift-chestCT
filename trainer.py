@@ -807,10 +807,18 @@ class TrainerDifIR(TrainerBase):
                 from concurrent.futures import ThreadPoolExecutor
                 with ThreadPoolExecutor(max_workers=4) as executor:
                     batch_losses = list(executor.map(compute_loss, zip(imgs2d, labels_np)))
-
-                mCTree_loss = torch.stack(batch_losses)
                 
-                losses['mCTree'] = mCTree_loss.to(x0_pred_img.device)
+                w_table = torch.tensor([
+                    1.0, 20.0, 37.3, 56.6, 77.4,
+                    99.4, 121.0, 142.0, 162.0, 178.0,
+                    193.0, 203.0, 211.0, 215.0, 216.0
+                ], dtype=torch.float32, device=x0_pred_img.device)
+                
+                batch_losses = torch.stack(batch_losses).to(x0_pred_img.device) 
+                wt = w_table[tt]                          
+                mCTree_loss = (wt * batch_losses)
+                
+                losses['mCTree'] = mCTree_loss
                 total_loss += self.configs.loss.weight_multiCTree * mCTree_loss
                 
             #losses['loss'] = losses['mse']
