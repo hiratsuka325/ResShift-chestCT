@@ -769,7 +769,7 @@ class TrainerDifIR(TrainerBase):
                     batch_losses.append(
                         loss_maxima(
                             self.ctree_graph,
-                            img2d,
+                            (img2d + 1) * 0.5,
                             self.ctree_sm,
                             self.ctree_im,
                             num_target_maxima=0,
@@ -797,7 +797,7 @@ class TrainerDifIR(TrainerBase):
 
                     return loss_maxima_mCTree(
                         self.ctree_graph,
-                        img2d,
+                        (img2d + 1) * 0.5,
                         label,
                         self.ctree_sm,
                         self.ctree_im,

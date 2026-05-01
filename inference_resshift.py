@@ -131,7 +131,7 @@ def get_configs(args):
     elif args.task == 'chestct':
         configs = OmegaConf.load('./configs/realsr_swinunet_realesrgan256.yaml')
         assert args.scale == 4, 'We only support the 4x super-resolution now!'
-        ckpt_path = f'experiments/2025-10-19-16-14/ema_ckpts/ema_model_270000.pth'
+        ckpt_path = f'experiments/ResShift/ema_ckpts/ema_model_250000.pth'
         vqgan_path = ckpt_dir / f'autoencoder_vq_f4.pth'
     else:
         raise TypeError(f"Unexpected task type: {args.task}!")
