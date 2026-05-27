@@ -789,7 +789,8 @@ class TrainerDifIR(TrainerBase):
                     self.autoencoder,
                 )
 
-                imgs2d = x0_pred_img.mean(1).cpu()      # (B, H, W)
+                weights = torch.tensor([0.299, 0.587, 0.114], dtype=x0_pred_img.dtype, device=x0_pred_img.device)
+                imgs2d = (x0_pred_img * weights.view(1, 3, 1, 1)).sum(1).cpu()  # (B, H, W)
                 labels_np = micro_data['label'].squeeze(1).cpu().numpy()     # (B, H, W)
 
                 def compute_loss(args):
