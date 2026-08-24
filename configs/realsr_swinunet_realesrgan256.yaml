@@ -199,8 +199,12 @@ loss:
   weight_mse: 1.0         # 既存の MSE の重み
   use_CTree: False        # CTree損失を使うかどうか
   weight_CTree: 0.0001      # CTree損失の重み
-  use_multiCTree: True        # multiCTree損失を使うかどうか
+  use_multiCTree: False        # multiCTree損失を使うかどうか
   weight_multiCTree: 0.0000001      # multiCTree損失の重み
   sm : "dynamics"
   # im : "dynamics"
   im : "precision"
+
+  use_SATLoss : True # SAT損失を使うかどうか
+  weight_SATLoss : 0.0001 # SAT損失の重み
+  precal_PD : False # GTのPDについて、Trueの場合は事前に計算して保存したものを使い、Falseの場合は学習時に毎回計算する

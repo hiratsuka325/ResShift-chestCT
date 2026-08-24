@@ -38,6 +38,7 @@ import wandb
 
 from models.CTree import loss_maxima
 from models.multiCTree import loss_maxima_mCTree
+from models.SATLoss import PDMatchingLoss
 
 class TrainerBase:
     def __init__(self, configs):
@@ -526,6 +527,12 @@ class TrainerDifIR(TrainerBase):
             # saliency / importance
             self.ctree_sm = self.configs.loss.sm
             self.ctree_im = self.configs.loss.im
+            
+        if getattr(self.configs.loss, "use_SATLoss", False):
+            self.pd_matching_loss = PDMatchingLoss(
+                self.configs.loss,
+                p=2
+            )
 
     @torch.no_grad()
     def _dequeue_and_enqueue(self):
@@ -822,6 +829,37 @@ class TrainerDifIR(TrainerBase):
                 losses['mCTree'] = mCTree_loss
                 total_loss += self.configs.loss.weight_multiCTree * mCTree_loss
                 
+            if getattr(self.configs.loss, 'use_SATLoss', False):
+                # 潜在空間 -> 画像空間に変換
+                x0_pred_img = self.base_diffusion.decode_first_stage(
+                    z0_pred,
+                    self.autoencoder,
+                )
+
+                # RGB -> グレースケール
+                weights = torch.tensor(
+                    [0.299, 0.587, 0.114],
+                    dtype=x0_pred_img.dtype,
+                    device=x0_pred_img.device
+                )
+
+                pred_gray = (
+                    x0_pred_img * weights.view(1, 3, 1, 1)
+                ).sum(1, keepdim=True)  # (B, 1, H, W)
+
+                # [-1, 1] -> [0, 1]
+                pred_gray = (pred_gray + 1) * 0.5
+
+                # PD Matching Loss
+                pd_loss = self.pd_matching_loss(
+                    pred_gray,
+                    micro_data['gt'],
+                    micro_data['img_name']
+                )
+
+                losses['PDMatching'] = pd_loss
+                total_loss += self.configs.loss.weight_SATLoss * pd_loss
+                
             #losses['loss'] = losses['mse']
             losses['loss'] = total_loss    
             loss = losses['loss'].mean() / num_grad_accumulate
@@ -952,6 +990,8 @@ class TrainerDifIR(TrainerBase):
                         wandb_log_dict[f'CTree/t{current_record}'] = self.loss_mean['CTree'][jj].item()
                     if 'mCTree' in self.loss_mean:
                         wandb_log_dict[f'multiCTree/t{current_record}'] = self.loss_mean['mCTree'][jj].item()
+                    if 'PDMatching' in self.loss_mean:
+                        wandb_log_dict[f'SATLoss/t{current_record}'] = self.loss_mean['PDMatching'][jj].item()
                 wandb_log_dict['lr'] = self.optimizer.param_groups[0]['lr']
                 wandb_log_dict['step'] = self.current_iters
                 wandb.log(wandb_log_dict)
