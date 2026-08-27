@@ -98,13 +98,14 @@ class PDMatchingLoss(nn.Module):
             pd_y_0 = pi_y[i][0][0]
 
             # 1-st persistent diagram (loops)
-            pd_x_1 = pi_x[i][0][1]
-            pd_y_1 = pi_y[i][0][1]
+            # pd_x_1 = pi_x[i][0][1]
+            # pd_y_1 = pi_y[i][0][1]
 
             wd_0 = self.criterion(pd_x_0, pd_y_0, H, W)
-            wd_1 = self.criterion(pd_x_1, pd_y_1, H, W)
+            # wd_1 = self.criterion(pd_x_1, pd_y_1, H, W)
 
-            loss += (wd_0 + wd_1)
+            loss += wd_0
+            # loss += (wd_0 + wd_1)
 
         loss /= N
 

@@ -853,8 +853,8 @@ class TrainerDifIR(TrainerBase):
                 # PD Matching Loss
                 pd_loss = self.pd_matching_loss(
                     pred_gray,
-                    micro_data['gt'],
-                    micro_data['img_name']
+                    micro_data['gt'][:, 0:1, :, :],
+                    #micro_data['img_name']
                 )
 
                 losses['PDMatching'] = pd_loss

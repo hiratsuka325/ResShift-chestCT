@@ -75,8 +75,8 @@ class SpatialAware_WassersteinDistance(torch.nn.Module):
 
             # Creator pixel coordinate for each homology class
             # We don't use the destroyer since infinite persistent might occur
-            C1 = pers_info[0].pairing[:,:2].float()
-            C2 = pers_info[1].pairing[:,:2].float()
+            C1 = pers_info[0].pairing[:,:2].float().to(D1.device)
+            C2 = pers_info[1].pairing[:,:2].float().to(D2.device)
 
             # Normalize pixel coordinate (0->H, 0->W) to (0->1, 0->1)
             C1[:, 0] /= H
