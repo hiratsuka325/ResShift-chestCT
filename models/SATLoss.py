@@ -3,6 +3,48 @@ import torch.nn as nn
 import torch.nn.functional as F
 from models.cubical_complex import CubicalComplex
 from models.PDMatching import SpatialAware_WassersteinDistance
+import multiprocessing
+
+def _pd_loss_worker(args):
+    """
+    1枚の画像について
+    GUDHI → H0 persistent diagram → Wasserstein distance
+    を計算するworker
+    """
+
+    input_np, target_np, H, W, p = args
+
+    # NumPy → CPU Tensor
+    input_img = torch.from_numpy(input_np).float()
+    target_img = torch.from_numpy(target_np).float()
+
+    # (H, W) → (1, 1, H, W)
+    input_img = input_img.unsqueeze(0).unsqueeze(0)
+    target_img = target_img.unsqueeze(0).unsqueeze(0)
+
+    # CubicalComplex
+    getPersistentInfo = CubicalComplex(dim=2)
+
+    # Persistent homology
+    pi_x = getPersistentInfo(input_img)
+    pi_y = getPersistentInfo(target_img)
+
+    # H0だけ使用
+    pd_x_0 = pi_x[0][0]
+    pd_y_0 = pi_y[0][0]
+
+    # Wasserstein distance
+    criterion = SpatialAware_WassersteinDistance(p=p)
+
+    wd_0 = criterion(
+        pd_x_0,
+        pd_y_0,
+        H,
+        W
+    )
+
+    # multiprocessingでTensorを返す必要はない
+    return wd_0.item()
 
 class PDMatchingLoss(nn.Module):
     def __init__(self, opt, p=2):
@@ -84,29 +126,40 @@ class PDMatchingLoss(nn.Module):
         input = 1.0 - input
         target = 1.0 - target
 
-        pi_x = self.getPersistentInfo(input)
-        if self.precal_PD:  # read ground truth persistent diagram from pre-computed
-            pi_y = [self.PD_target[img_names[0]][0]]
-            for idx in range(1, N):
-                pi_y.append(self.PD_target[img_names[idx]][0])
-        else:
-            pi_y = self.getPersistentInfo(target)
+        # --------------------------------------------------
+        # 画像ごとにworkerへ渡すデータを作る
+        # --------------------------------------------------
+
+        inputs = []
 
         for i in range(N):
-            # 0-th persistent diagram (connected components)
-            pd_x_0 = pi_x[i][0][0]
-            pd_y_0 = pi_y[i][0][0]
+            # 1枚の画像
+            input_np = (input[i, 0].detach().cpu().numpy())
+            target_np = (target[i, 0].detach().cpu().numpy())
 
-            # 1-st persistent diagram (loops)
-            # pd_x_1 = pi_x[i][0][1]
-            # pd_y_1 = pi_y[i][0][1]
+            inputs.append(
+                (input_np, target_np, H, W, 2)
+            )
+            
+        # --------------------------------------------------
+        # 画像単位で並列計算
+        # --------------------------------------------------
 
-            wd_0 = self.criterion(pd_x_0, pd_y_0, H, W)
-            # wd_1 = self.criterion(pd_x_1, pd_y_1, H, W)
+        num_workers = min(8, N)
 
-            loss += wd_0
-            # loss += (wd_0 + wd_1)
+        with multiprocessing.Pool(processes=num_workers) as pool:
 
-        loss /= N
-
-        return loss
+            losses = pool.map(
+                _pd_loss_worker,
+                inputs
+            )
+            
+        loss_value = sum(losses) / N
+        
+        loss = torch.tensor(
+            loss_value,
+            dtype=torch.float32,
+            device=self.device
+        )
+        
+        return loss    

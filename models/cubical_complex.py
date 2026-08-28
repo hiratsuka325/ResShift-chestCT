@@ -5,24 +5,6 @@ from torch import nn
 
 from torch_topological.nn import PersistenceInformation
 import gudhi
-from concurrent.futures import ProcessPoolExecutor
-
-def _gudhi_persistence_worker(args):
-    x_np, superlevel = args
-
-    if superlevel:
-        x_np = -x_np
-
-    cubical_complex = gudhi.CubicalComplex(
-        dimensions=x_np.shape,
-        top_dimensional_cells=x_np.flatten()
-    )
-
-    cubical_complex.persistence()
-    
-    cofaces = cubical_complex.cofaces_of_persistence_pairs()
-
-    return cofaces
 
 class CubicalComplex(nn.Module):
     def __init__(self, superlevel=False, dim=2):
@@ -56,69 +38,9 @@ class CubicalComplex(nn.Module):
         # Handle image with channels and batch index, such as a tensor of
         # the form `(B, C, H, W)`.
         elif dims == 2:
-            
-            batch_size = x.shape[0]
-            channel_size = x.shape[1]
-            
-            assert channel_size == 1, \
-                "This implementation assumes C=1."
-                
-            inputs = []
-
-            for i in range(batch_size):
-                x_img = x[i, 0]
-                x_np = x_img.detach().cpu().numpy()
-                inputs.append((x_np, self.superlevel))
-                
-            with ProcessPoolExecutor(max_workers=8) as executor:
-                cofaces_list = list(
-                    executor.map(
-                        _gudhi_persistence_worker,
-                        inputs
-                    )
-                )
-                
-            output = []
-
-            for i in range(batch_size):
-
-                x_img = x[i, 0]
-
-                # superlevelの場合はPDの値についても
-                # GUDHIと同じ変換をする
-                if self.superlevel:
-                    x_for_pd = -x_img
-                else:
-                    x_for_pd = x_img
-
-                cofaces = cofaces_list[i]
-
-                image_persistence_information = []
-
-                max_dim = len(x_img.shape)
-
-                for dim in range(max_dim):
-
-                    pi = self._extract_generators_and_diagrams(
-                        x_for_pd,
-                        cofaces,
-                        dim
-                    )
-
-                    image_persistence_information.append(pi)
-
-                # 元の形
-                # [batch][channel][PersistenceInformation]
-                output.append(
-                    [image_persistence_information]
-                )
-
-            return output
-
-        else:
-            raise ValueError(
-                f"Unsupported input dimensions: {x.shape}"
-            )        
+            return [
+                    [self._forward(x__) for x__ in x_] for x_ in x
+            ]
 
     def _forward(self, x):
             if self.superlevel:
