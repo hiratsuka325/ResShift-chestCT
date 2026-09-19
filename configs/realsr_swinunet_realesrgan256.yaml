@@ -40,8 +40,8 @@ diffusion:
     min_noise_level: 0.04
     kappa: 2.0
     weighted_mse: False
-    # predict_type: xstart
-    predict_type: epsilon
+    predict_type: xstart
+    # predict_type: epsilon
     timestep_respacing: ~
     scale_factor: 1.0
     normalize_input: True
@@ -204,6 +204,9 @@ loss:
   sm : "dynamics"
   # im : "dynamics"
   im : "precision"
+
+  use_wassersteinLoss : True # wasserstein損失を使うかどうか
+  weight_wassersteinLoss : 0.0001 # wasserstein損失の重み
 
   use_SATLoss : True # SAT損失を使うかどうか
   weight_SATLoss : 0.0001 # SAT損失の重み
