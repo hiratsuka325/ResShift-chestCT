@@ -205,9 +205,12 @@ loss:
   # im : "dynamics"
   im : "precision"
 
-  use_wassersteinLoss : True # wasserstein損失を使うかどうか
+  use_wassersteinLoss : False # wasserstein損失を使うかどうか
   weight_wassersteinLoss : 0.0001 # wasserstein損失の重み
 
-  use_SATLoss : True # SAT損失を使うかどうか
+  use_wassersteinLoss_gaku : True # wasserstein損失を使うかどうか
+  weight_wassersteinLoss_gaku : 0.0001 # wasserstein損失の重み
+
+  use_SATLoss : False # SAT損失を使うかどうか
   weight_SATLoss : 0.0001 # SAT損失の重み
   precal_PD : False # GTのPDについて、Trueの場合は事前に計算して保存したものを使い、Falseの場合は学習時に毎回計算する

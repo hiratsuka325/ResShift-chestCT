@@ -40,6 +40,7 @@ from models.CTree import loss_maxima
 from models.multiCTree import loss_maxima_mCTree
 from models.SATLoss import PDMatchingLoss
 from models.wasserstein import wassersteinLoss
+from models.wasserstein_gaku import wassersteinLoss_gaku
 
 class TrainerBase:
     def __init__(self, configs):
@@ -530,10 +531,15 @@ class TrainerDifIR(TrainerBase):
             self.ctree_im = self.configs.loss.im
             
         if getattr(self.configs.loss, "use_wassersteinLoss", False):
-                            self.wasserstein_loss = wassersteinLoss(
-                                self.configs.loss,
-                            )
+            self.wasserstein_loss = wassersteinLoss(
+                self.configs.loss,
+            )
             
+        if getattr(self.configs.loss, "use_wassersteinLoss_gaku", False):
+            self.wasserstein_loss_gaku = wassersteinLoss(
+                self.configs.loss,
+            )
+
         if getattr(self.configs.loss, "use_SATLoss", False):
             self.pd_matching_loss = PDMatchingLoss(
                 self.configs.loss,
@@ -864,6 +870,36 @@ class TrainerDifIR(TrainerBase):
 
                 losses['wasserstein'] = wasserstein_loss
                 total_loss += self.configs.loss.weight_wassersteinLoss * wasserstein_loss
+                
+            if getattr(self.configs.loss, 'use_wassersteinLoss_gaku', False):
+                # 潜在空間 -> 画像空間に変換
+                x0_pred_img = self.base_diffusion.decode_first_stage(
+                    z0_pred,
+                    self.autoencoder,
+                )
+
+                # RGB -> グレースケール
+                weights = torch.tensor(
+                    [0.299, 0.587, 0.114],
+                    dtype=x0_pred_img.dtype,
+                    device=x0_pred_img.device
+                )
+
+                pred_gray = (
+                    x0_pred_img * weights.view(1, 3, 1, 1)
+                ).sum(1, keepdim=True)  # (B, 1, H, W)
+
+                # [-1, 1] -> [0, 1]
+                pred_gray = (pred_gray + 1) * 0.5
+
+                # wasserstein Loss
+                wasserstein_loss_gaku = self.wasserstein_loss_gaku(
+                    pred_gray,
+                    micro_data['gt'][:, 0:1, :, :],
+                )
+
+                losses['wasserstein_gaku'] = wasserstein_loss_gaku
+                total_loss += self.configs.loss.weight_wassersteinLoss_gaku * wasserstein_loss_gaku
                                 
             if getattr(self.configs.loss, 'use_SATLoss', False):
                 # 潜在空間 -> 画像空間に変換
@@ -1030,6 +1066,8 @@ class TrainerDifIR(TrainerBase):
                         wandb_log_dict[f'SATLoss/t{current_record}'] = self.loss_mean['PDMatching'][jj].item()
                     if 'wasserstein' in self.loss_mean:
                         wandb_log_dict[f'wassersteinLoss/t{current_record}'] = self.loss_mean['wasserstein'][jj].item()
+                    if 'wasserstein_gaku' in self.loss_mean:
+                        wandb_log_dict[f'wassersteinLoss_gaku/t{current_record}'] = self.loss_mean['wasserstein_gaku'][jj].item() 
                 wandb_log_dict['lr'] = self.optimizer.param_groups[0]['lr']
                 wandb_log_dict['step'] = self.current_iters
                 wandb.log(wandb_log_dict)
