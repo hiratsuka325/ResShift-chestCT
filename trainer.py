@@ -529,6 +529,11 @@ class TrainerDifIR(TrainerBase):
             self.ctree_sm = self.configs.loss.sm
             self.ctree_im = self.configs.loss.im
             
+        if getattr(self.configs.loss, "use_wassersteinLoss", False):
+                            self.wasserstein_loss = wassersteinLoss(
+                                self.configs.loss,
+                            )
+            
         if getattr(self.configs.loss, "use_SATLoss", False):
             self.pd_matching_loss = PDMatchingLoss(
                 self.configs.loss,
@@ -831,35 +836,34 @@ class TrainerDifIR(TrainerBase):
                 total_loss += self.configs.loss.weight_multiCTree * mCTree_loss
             
             if getattr(self.configs.loss, 'use_wassersteinLoss', False):
-                            # 潜在空間 -> 画像空間に変換
-                            x0_pred_img = self.base_diffusion.decode_first_stage(
-                                z0_pred,
-                                self.autoencoder,
-                            )
-            
-                            # RGB -> グレースケール
-                            weights = torch.tensor(
-                                [0.299, 0.587, 0.114],
-                                dtype=x0_pred_img.dtype,
-                                device=x0_pred_img.device
-                            )
-            
-                            pred_gray = (
-                                x0_pred_img * weights.view(1, 3, 1, 1)
-                            ).sum(1, keepdim=True)  # (B, 1, H, W)
-            
-                            # [-1, 1] -> [0, 1]
-                            pred_gray = (pred_gray + 1) * 0.5
-            
-                            # wasserstein Loss
-                            wasserstein_loss = wassersteinLoss(
-                                pred_gray,
-                                micro_data['gt'][:, 0:1, :, :],
-                                #micro_data['img_name']
-                            )
-            
-                            losses['wasserstein'] = wasserstein_loss
-                            total_loss += self.configs.loss.weight_wassersteinLoss * wasserstein_loss
+                # 潜在空間 -> 画像空間に変換
+                x0_pred_img = self.base_diffusion.decode_first_stage(
+                    z0_pred,
+                    self.autoencoder,
+                )
+
+                # RGB -> グレースケール
+                weights = torch.tensor(
+                    [0.299, 0.587, 0.114],
+                    dtype=x0_pred_img.dtype,
+                    device=x0_pred_img.device
+                )
+
+                pred_gray = (
+                    x0_pred_img * weights.view(1, 3, 1, 1)
+                ).sum(1, keepdim=True)  # (B, 1, H, W)
+
+                # [-1, 1] -> [0, 1]
+                pred_gray = (pred_gray + 1) * 0.5
+
+                # wasserstein Loss
+                wasserstein_loss = self.wasserstein_loss(
+                    pred_gray,
+                    micro_data['gt'][:, 0:1, :, :],
+                )
+
+                losses['wasserstein'] = wasserstein_loss
+                total_loss += self.configs.loss.weight_wassersteinLoss * wasserstein_loss
                                 
             if getattr(self.configs.loss, 'use_SATLoss', False):
                 # 潜在空間 -> 画像空間に変換

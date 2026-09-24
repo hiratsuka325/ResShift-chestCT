@@ -4,6 +4,84 @@ import torch.nn.functional as F
 
 from torch_topological.utils import wrap_if_not_iterable
 
+class WassersteinDistance(torch.nn.Module):
+    """
+        Given the persistent diagram of the prediction and ground truth,
+        compute the Wasserstein distance between the PDs
+    """
+
+    def __init__(self, p=torch.inf, q=1):
+        """
+            p : order of the norm.
+            q: order of the Wasserstein distance.
+        """
+        super().__init__()
+        self.p = p
+        self.q = q
+
+    def _project_to_diagonal(self, diagram):
+        x = diagram[:, 0]
+        y = diagram[:, 1]
+
+        return 0.5 * torch.stack(((x + y), (x + y)), 1)
+
+    def _distance_to_diagonal(self, diagram):
+        return torch.linalg.vector_norm(
+            diagram - self._project_to_diagonal(diagram),
+            self.p,
+            dim=1
+        )
+
+    def _make_distance_matrix(self, D1, D2):
+        # Smallest distance from (all) persistent features to the diagonal of the persistent diagram (birth=death)
+        dist_D11 = self._distance_to_diagonal(D1)
+        dist_D22 = self._distance_to_diagonal(D2)
+
+        # distance matrix with global topological info only (creation and destruction time)
+        PD_dist = torch.cdist(D1, D2, p=self.p)
+
+        # Extend the matrix to include also matching cost to diagonal
+        upper_blocks = torch.hstack((PD_dist, dist_D11[:, None]))
+        lower_blocks = torch.cat(
+            (dist_D22, torch.tensor(0, device=dist_D22.device).unsqueeze(0))
+        )
+        M = torch.vstack((upper_blocks, lower_blocks))
+
+        M = M.pow(self.q)
+
+        return M
+    
+    def forward(self, X, Y):
+            """
+                X, Y : Persistent diagram of class:`PersistenceInformation`
+            """
+            total_cost = 0.0
+    
+            X = wrap_if_not_iterable(X)
+            Y = wrap_if_not_iterable(Y)
+    
+            for pers_info in zip(X, Y):
+                # Persistent diagram
+                D1 = pers_info[0].diagram
+                D2 = pers_info[1].diagram
+    
+                n = len(D1)
+                m = len(D2)
+    
+                dist = self._make_distance_matrix(D1, D2)
+    
+                # weight vectors for Wasserstein matching
+                a = torch.ones(n + 1, device=dist.device)
+                b = torch.ones(m + 1, device=dist.device)
+    
+                a[-1] = m
+                b[-1] = n
+    
+                # Wasserstein (Earth Moving Distance) computation.
+                total_cost += ot.emd2(a, b, dist)
+    
+            return total_cost.pow(1.0 / self.q)
+    
 class SpatialAware_WassersteinDistance(torch.nn.Module):
     """
         Given the persistent diagram of the prediction and ground truth,

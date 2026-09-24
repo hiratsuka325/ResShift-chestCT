@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from models.cubical_complex import CubicalComplex
-from gudhi.wasserstein import wasserstein_distance
+from models.PDMatching import WassersteinDistance
 import numpy as np
 
 class wassersteinLoss(nn.Module):
@@ -10,6 +10,9 @@ class wassersteinLoss(nn.Module):
         super().__init__()
         # Cubical complex constructor for persistent homology computation
         self.getPersistentInfo = CubicalComplex(dim=2)
+        
+        # distance between persistent diagrams
+        self.criterion = WassersteinDistance(p=p)
 
         # For precomputed ground truth persistent diagram.
         self.precal_PD = opt.precal_PD
@@ -99,18 +102,8 @@ class wassersteinLoss(nn.Module):
             # pd_x_1 = pi_x[i][0][1]
             # pd_y_1 = pi_y[i][0][1]
 
-            wd_0 = wasserstein_distance(
-                pd_x_0,
-                pd_y_0,
-                order=1,
-                internal_p=np.inf
-            )
-            # wd_1 = wasserstein_distance(
-            #                 pd_x_1,
-            #                 pd_y_1,
-            #                 order=1,
-            #                 internal_p=np.inf
-            #             )
+            wd_0 = self.criterion(pd_x_0, pd_y_0)
+            # wd_1 = self.criterion(pd_x_1, pd_y_1)
         
             loss += wd_0
             # loss += (wd_0 + wd_1)
